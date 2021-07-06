@@ -1,5 +1,14 @@
 project (GeographicLib-Fortran Fortran)
 
+# Version information
+set (PROJECT_VERSION_MAJOR 2)
+set (PROJECT_VERSION_MINOR 0)
+set (PROJECT_VERSION_PATCH 0)
+set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
+if (PROJECT_VERSION_PATCH GREATER 0)
+  set (PROJECT_VERSION "${PROJECT_VERSION}.${PROJECT_VERSION_PATCH}")
+endif ()
+
 cmake_minimum_required (VERSION 3.1.0)
 
 # Set a default build type for single-configuration cmake generators if
@@ -10,9 +19,9 @@ endif ()
 
 # Make the compiler more picky.
 if (MSVC)
-  set_target_properties (${TOOLS} PROPERTIES COMPILE_FLAGS "/W4")
+  set (EXTRA_FLAGS "/W4")
 else ()
-  set_target_properties (${TOOLS} PROPERTIES COMPILE_FLAGS
+  set (EXTRA_FLAGS
     "-Wall -Wextra -pedantic -std=f95 -fimplicit-none -Wno-compare-reals")
 endif ()
 
@@ -37,20 +46,32 @@ if (CONVERT_WARNINGS_TO_ERRORS)
   endif ()
 endif ()
 
+set (LIBNAME geodfor)
 set (TOOLS geoddirect geodinverse planimeter geodtest)
-
-foreach (TOOL ${TOOLS})
-  add_executable (${TOOL} ${TOOL}.for geodesic.for geodesic.inc)
-endforeach ()
-
 # Work alikes for NGS geodesic tools.  This uses legacy code from NGS
 # and so they trigger multiple errors and warnings if compiled with the
 # compile flags above.
-add_executable (ngsforward ngsforward.for ngscommon.for geodesic.for)
-add_executable (ngsinverse ngsinverse.for ngscommon.for geodesic.for)
+set (NGSTOOLS ngsforward ngsinverse)
+
+if (MSVC OR CMAKE_CONFIGURATION_TYPES)
+  # Add _d suffix for your debug versions of the tools
+  set_target_properties (${TOOLS} PROPERTIES
+    DEBUG_POSTFIX _d)
+endif ()
+
+add_subdirectory (src)
+add_subdirectory (tools)
 
 # Turn on testing
 enable_testing ()
 
 # Run the test suite
 add_test (NAME geodtest COMMAND geodtest)
+
+# The documentation depends on doxygen.
+if (BUILD_DOCUMENTATION)
+  set (DOXYGEN_SKIP_DOT ON)
+  # Version 1.8.7 or later needed for &hellip;
+  find_package (Doxygen 1.8.7 REQUIRED)
+  add_subdirectory (doc)
+endif ()

@@ -28,7 +28,7 @@ compile correctly with just about any Fortran compiler.
 
 \section download-for Downloading the source
 
-The Fortran library is part of %GeographicLib which available for download at
+The Fortran library is part of GeographicLib which available for download at
 - <a href="https://sourceforge.net/projects/geographiclib/files/distrib/GeographicLib-1.52.tar.gz">
   GeographicLib-1.52.tar.gz</a>
 - <a href="https://sourceforge.net/projects/geographiclib/files/distrib/GeographicLib-1.52.zip">
@@ -126,8 +126,7 @@ and are therefore in the public domain.
   GeographicLib web site</a>
   - Documentation on the C++ classes: GeographicLib::Geodesic,
     GeographicLib::GeodesicLine, GeographicLib::PolygonAreaT.
-  - The section in the %GeographicLib documentation on geodesics: \ref
-    geodesic.
+  - The section in the GeographicLib documentation on geodesics.
 - <a href="https://sourceforge.net/p/geographiclib/code/ci/release/tree/">
   git repository</a>
 - Implementations in various languages

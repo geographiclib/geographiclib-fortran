@@ -1262,7 +1262,7 @@
      +    -60d0, 180d0, 60d0,
      +    -60d0, 180d0, 60d0 /
       double precision a, f, AA, PP, AA1
-      integer r, assert
+      integer i, r, assert
       include 'geodesic.inc'
 
 * WGS84 values
