@@ -622,7 +622,7 @@
       lat2x = AngRnd(LatFix(lat2))
 * Swap points so that point with higher (abs) latitude is point 1
 * If one latitude is a nan, then it becomes lat1.
-      if (abs(lat1x) .lt. abs(lat2x)) then
+      if (abs(lat1x) .lt. abs(lat2x) .or. lat2x .ne. lat2x) then
         swapp = -1
       else
         swapp = 1

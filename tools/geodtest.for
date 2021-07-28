@@ -1058,6 +1058,29 @@
       return
       end
 
+      integer function tstg94()
+* Check fix for lat2 = nan being treated as lat2 = 0 (bug found 2021-07-26)
+
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      double precision a, f, LatFix
+      integer r, chknan, omask
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+      omask = 0
+      r = 0
+      call invers(a, f, 0d0, 0d0, LatFix(91d0), 90d0,
+     +    s12, azi1, azi2, omask, a12, m12, MM12, MM21, SS12)
+      r = r + chknan(azi1)
+      r = r + chknan(azi2)
+      r = r + chknan(s12)
+
+      tstg94 = r
+      return
+      end
+
       integer function tstp0()
 * Check fix for pole-encircling bug found 2011-03-16
       double precision lata(4), lona(4)
@@ -1289,7 +1312,7 @@
      +    tstg0, tstg1, tstg2, tstg5, tstg6, tstg9, tstg10, tstg11,
      +    tstg12, tstg14, tstg15, tstg17, tstg26, tstg28, tstg33,
      +    tstg55, tstg59, tstg61, tstg73, tstg74, tstg76, tstg78,
-     +    tstg80, tstg84, tstg92,
+     +    tstg80, tstg84, tstg92, tstg94,
      +    tstp0, tstp5, tstp6, tstp12, tstp13, tstp15, tstp19, tstp21
 
       n = 0
@@ -1432,6 +1455,11 @@
       if (i .gt. 0) then
         n = n + 1
         print *, 'tstg92 fail:', i
+      end if
+      i = tstg94()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'tstg94 fail:', i
       end if
       i = tstp0()
       if (i .gt. 0) then
