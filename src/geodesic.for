@@ -12,7 +12,8 @@
 *!   J. Geodesy <b>87</b>, 43--55 (2013);
 *!   DOI: <a href="https://doi.org/10.1007/s00190-012-0578-z">
 *!   10.1007/s00190-012-0578-z</a>;
-*!   addenda: <a href="https://geographiclib.sourceforge.io/geod-addenda.html">
+*!   addenda: <a href=
+*!   "https://geographiclib.sourceforge.io/misc/geod-addenda.html">
 *!   geod-addenda.html</a>.
 *! .
 *! The principal advantages of these algorithms over previous ones
@@ -602,20 +603,14 @@
 * If very close to being on the same half-meridian, then make it so.
       lon12 = AngDif(lon1, lon2, lon12s)
 * Make longitude difference positive.
-      if (lon12 .ge. 0) then
-        lonsgn = 1
-      else
-        lonsgn = -1
-      end if
-      lon12 = lonsgn * AngRnd(lon12)
-      lon12s = AngRnd((180 - lon12) - lonsgn * lon12s)
+      lonsgn = int(sign(1d0, lon12))
+      lon12 = lonsgn * lon12
+      lon12s = lonsgn * lon12s
       lam12 = lon12 * degree
-      if (lon12 .gt. 90) then
-        call sncsdx(lon12s, slam12, clam12)
-        clam12 = -clam12
-      else
-        call sncsdx(lon12, slam12, clam12)
-      end if
+* Calculate sincos of lon12 + error (this applies AngRound internally).
+      call sncsde(lon12, lon12s, slam12, clam12)
+* the supplementary longitude difference
+      lon12s = (180 - lon12) - lon12s
 
 * If really close to the equator, treat as on equator.
       lat1x = AngRnd(LatFix(lat1))
@@ -632,11 +627,7 @@
         call swap(lat1x, lat2x)
       end if
 * Make lat1 <= 0
-      if (lat1x .lt. 0) then
-        latsgn = 1
-      else
-        latsgn = -1
-      end if
+      latsgn = int(sign(1d0, -lat1x))
       lat1x = lat1x * latsgn
       lat2x = lat2x * latsgn
 * Now we have
@@ -704,8 +695,8 @@
         csig2 = calp2 * cbet2
 
 * sig12 = sig2 - sig1
-        sig12 = atan2(0d0 + max(0d0, csig1 * ssig2 - ssig1 * csig2),
-     +                               csig1 * csig2 + ssig1 * ssig2)
+        sig12 = atan2(max(0d0, csig1 * ssig2 - ssig1 * csig2) + 0d0,
+     +                         csig1 * csig2 + ssig1 * ssig2)
         call Lengs(n, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2,
      +      cbet1, cbet2, lmask,
      +      s12x, m12x, dummy, MM12, MM21, ep2, Ca)
@@ -1546,12 +1537,12 @@
 * norm2x(somg2, comg2); -- don't need to normalize!
 
 * sig12 = sig2 - sig1, limit to [0, pi]
-      sig12 = atan2(0d0 + max(0d0, csig1 * ssig2 - ssig1 * csig2),
-     +                             csig1 * csig2 + ssig1 * ssig2)
+      sig12 = atan2(max(0d0, csig1 * ssig2 - ssig1 * csig2) + 0d0,
+     +                       csig1 * csig2 + ssig1 * ssig2)
 
 * omg12 = omg2 - omg1, limit to [0, pi]
-      somg12 = 0d0 + max(0d0, comg1 * somg2 - somg1 * comg2)
-      comg12 =                comg1 * comg2 + somg1 * somg2
+      somg12 = max(0d0, comg1 * somg2 - somg1 * comg2) + 0d0
+      comg12 =          comg1 * comg2 + somg1 * somg2
 * eta = omg12 - lam120
       eta = atan2(somg12 * clm120 - comg12 * slm120,
      +    comg12 * clm120 + somg12 * slm120)
@@ -2128,9 +2119,9 @@
       double precision lon1, lon2
 
       double precision lon1x, lon2x, lon12, AngNm, AngDif, e
+      lon12 = AngDif(lon1, lon2, e)
       lon1x = AngNm(lon1)
       lon2x = AngNm(lon2)
-      lon12 = AngDif(lon1x, lon2x, e)
       trnsit = 0
       if (lon1x .le. 0 .and. lon2x .gt. 0 .and. lon12 .gt. 0) then
         trnsit = 1
@@ -2205,8 +2196,6 @@
       q = nint(r / 90)
       r = (r - 90 * q) * degree
       s = sin(r)
-* sin(-0) isn't reliably -0, so...
-      if (x .eq. 0) s = x
       c = cos(r)
       q = mod(q + 4, 4)
       if (q .eq. 0) then
@@ -2219,7 +2208,52 @@
         sinx = -s
         cosx = -c
       else
-* q.eq.3
+* q .eq. 3
+        sinx = -c
+        cosx =  s
+      end if
+
+      if (sinx .eq. 0) then
+        sinx = sign(sinx, x)
+      end if
+      cosx = 0d0 + cosx
+
+      return
+      end
+
+      subroutine sncsde(x, t, sinx, cosx)
+* Compute sin(x+t) and cos(x+t) with x in degrees
+* input
+      double precision x, t
+* input/output
+      double precision sinx, cosx
+
+      double precision dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, AngRnd
+      integer digits, maxit1, maxit2
+      logical init
+      common /geocom/ dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
+
+      double precision r, s, c
+      integer q
+      q = nint(x / 90)
+      r = x - 90 * q
+      r = AngRnd(r + t) * degree
+      s = sin(r)
+      c = cos(r)
+      q = mod(q + 4, 4)
+      if (q .eq. 0) then
+        sinx =  s
+        cosx =  c
+      else if (q .eq. 1) then
+        sinx =  c
+        cosx = -s
+      else if (q .eq. 2) then
+        sinx = -s
+        cosx = -c
+      else
+* q .eq. 3
         sinx = -c
         cosx =  s
       end if
@@ -2321,5 +2355,6 @@
 *    polyval       polval
 *    LONG_UNROLL   unroll
 *    sincosd       sncsdx
+*    sincosde      sncsde
 *    atan2d        atn2dx
 *> @endcond SKIP

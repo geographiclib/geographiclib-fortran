@@ -918,8 +918,8 @@
       end
 
       integer function tstg80()
-* Some tests to add code coverage: computing scale in special cases + zero
-* length geodesic (includes GeodSolve80 - GeodSolve83).
+* Some tests to add code coverage: computing scale in special cases +
+* zero length geodesic (includes GeodSolve80 - GeodSolve83).
       double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
       double precision a, f
       integer r, assert, omask
@@ -1059,7 +1059,8 @@
       end
 
       integer function tstg94()
-* Check fix for lat2 = nan being treated as lat2 = 0 (bug found 2021-07-26)
+* Check fix for lat2 = nan being treated as lat2 = 0 (bug found
+* 2021-07-26)
 
       double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
       double precision a, f, LatFix
@@ -1179,9 +1180,9 @@
 
       integer function tstp12()
 * AA of arctic circle (not really -- adjunct to rhumb-AA test)
-      double precision lat(2), lon(2)
-      data lat / 66.562222222d0, 66.562222222d0 /
-      data lon / 0d0, 180d0 /
+      double precision lat(3), lon(3)
+      data lat / 66.562222222d0, 66.562222222d0, 66.562222222d0 /
+      data lon / 0d0, 180d0, 360d0 /
       double precision a, f, AA, PP
       integer r, assert
       include 'geodesic.inc'
@@ -1191,7 +1192,7 @@
       f = 1/298.257223563d0
       r = 0
 
-      call area(a, f, lat, lon, 2, AA, PP)
+      call area(a, f, lat, lon, 3, AA, PP)
       r = r + assert(PP, 10465729d0, 1d0)
       r = r + assert(AA, 0d0, 1d0)
 

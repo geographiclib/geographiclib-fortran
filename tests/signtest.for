@@ -1,9 +1,9 @@
-*> @file geodtest.for
-*! @brief Test suite for the geodesic routines in Fortran
+*> @file signtest.for
+*! @brief Test suite for the signs of +/-0 and +/-180 in Fortran
 *!
 *! Run these tests by configuring with cmake and running "make test".
 *!
-*! Copyright (c) Charles Karney (2015-2021) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2022) <charles@karney.com> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
 
@@ -175,9 +175,7 @@
       call sncsdx(        81d0, s2, c2)
       call sncsdx(-123456789d0, s3, c3)
       j = equiv(s1, c2) + equiv(s1, s3) + equiv(c1, s2) + equiv(c1, -c3)
-      if (j .gt. 0) then
-        print *, 'sincos accuracy failure'
-      endif
+      if (j .gt. 0) print *, 'sincos accuracy failure'
       i = i + j
 
       chsc = i
@@ -238,9 +236,7 @@
 
       s = 7d-16
       j = equiv(atn2dx(s, -1d0), 180 - atn2dx(s, 1d0));
-      if (j .gt. 0) then
-        print *, 'atan2d accuracy failure'
-      endif
+      if (j .gt. 0) print *, 'atan2d accuracy failure'
       i = i + j
 
       chat = i
@@ -254,11 +250,9 @@
 
       zz = sumx(x, y, t)
       chsm0 = equiv(zz, z)
-      if (chsm0 .gt. 0) then
-        print 10, x, y, zz, z
- 10     format(1x, 'sum(', g10.3, ',', g10.3, ') = ', g10.3,
-     +      ' not ', g10.3)
-      end if
+      if (chsm0 .gt. 0) print 10, x, y, zz, z
+ 10   format(1x, 'sum(', g10.3, ',', g10.3, ') = ', g10.3,
+     +    ' not ', g10.3)
 
       return
       end
@@ -286,11 +280,9 @@
 
       yy = AngNm(x)
       chnm0 = equiv(yy, y)
-      if (chnm0 .gt. 0) then
-        print 10, x, yy, y
- 10     format(1x, 'AngNormalize(', g10.3, ') = ', g10.3,
-     +      ' not ', g10.3)
-      end if
+      if (chnm0 .gt. 0) print 10, x, yy, y
+ 10   format(1x, 'AngNormalize(', g10.3, ') = ', g10.3,
+     +    ' not ', g10.3)
 
       return
       end
@@ -324,11 +316,9 @@
 
       dd = AngDif(x, y, t)
       chdf0 = equiv(dd, d)
-      if (chdf0 .gt. 0) then
-        print 10, x, y, dd, d
- 10     format(1x, 'AngDiff(', g10.3, ',', g10.3, ') = ', g10.3,
-     +      ' not ', g10.3)
-      end if
+      if (chdf0 .gt. 0) print 10, x, y, dd, d
+ 10   format(1x, 'AngDiff(', g10.3, ',', g10.3, ') = ', g10.3,
+     +    ' not ', g10.3)
 
       return
       end
@@ -356,9 +346,7 @@
       x = 138 + 128 * eps
       y = -164
       j = equiv( AngDif(x, y, t), 58 - 128 * eps )
-      if ( j .gt. 0 ) then
-        print *, 'AngDiff accuracy failure'
-      end if
+      if ( j .gt. 0 ) print *, 'AngDiff accuracy failure'
       i = i + j
 
       chdf = i
@@ -366,9 +354,160 @@
       return
       end
 
+      integer function tst1()
+* azimuth of geodesic line with points on equator determined by signs of
+* latitude
+      double precision C(3,2)
+*          lat1 lat2 azi1/2
+      data C /
+     +    +0d0, -0d0, 180,
+     +    -0d0, +0d0,   0 /
+      double precision a, f
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      integer i, k, equiv
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+
+      i = 0
+
+      do k = 1, 2
+        call invers(a, f, C(1, k), 0d0, C(2, k), 0d0,
+     +      s12, azi1, azi2, 0, a12, m12, MM12, MM21, SS12)
+        i = i + equiv(azi1, C(3, k)) + equiv(azi2, C(3, k))
+      end do
+
+      tst1 = i
+
+      return
+      end
+
+      integer function tst2()
+* Does the nearly antipodal equatorial solution go north or south?
+      double precision C(4,2)
+*          lat1 lat2 azi1 azi2
+      data C /
+     +    +0d0, +0d0,  56, 124,
+     +    -0d0, -0d0, 124,  56 /
+      double precision a, f
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      integer i, k, assert
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+
+      i = 0
+
+      do k = 1, 2
+        call invers(a, f, C(1, k), 0d0, C(2, k), 179.5d0,
+     +      s12, azi1, azi2, 0, a12, m12, MM12, MM21, SS12)
+        i = i + assert(azi1, C(3, k), 1d0) + assert(azi2, C(4, k), 1d0)
+      end do
+
+      tst2 = i
+
+      return
+      end
+
+      integer function tst3()
+* How does the exact antipodal equatorial path go N/S + E/W
+      double precision C(5,4)
+*          lat1 lat2 lon2 azi1 azi2
+      data C /
+     +    +0d0, +0d0, +180,   +0d0, +180,
+     +    -0d0, -0d0, +180, +180,   +0d0,
+     +    +0d0, +0d0, -180,   -0d0, -180,
+     +    -0d0, -0d0, -180, -180,   -0d0 /
+      double precision a, f
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      integer i, k, equiv
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+
+      i = 0
+
+      do k = 1, 4
+        call invers(a, f, C(1, k), 0d0, C(2, k), C(3, k),
+     +      s12, azi1, azi2, 0, a12, m12, MM12, MM21, SS12)
+        i = i + equiv(azi1, C(4, k)) + equiv(azi2, C(5, k))
+      end do
+
+      tst3 = i
+
+      return
+      end
+
+      integer function tst4()
+* Anipodal points on the equator with prolate ellipsoid
+      double precision C(2,2)
+*          lon2 azi1/2
+      data C /
+     +    +180, +90,
+     +    -180, -90 /
+      double precision a, f
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      integer i, k, equiv
+      include 'geodesic.inc'
+
+* Prolate values
+      a = 6.4d6
+      f = -1/300d0
+
+      i = 0
+
+      do k = 1, 2
+        call invers(a, f, 0d0, 0d0, 0d0, C(1, k),
+     +      s12, azi1, azi2, 0, a12, m12, MM12, MM21, SS12)
+        i = i + equiv(azi1, C(2, k)) + equiv(azi2, C(2, k))
+      end do
+
+      tst4 = i
+
+      return
+      end
+
+      integer function tst5()
+* azimuths = +/-0 and +/-180 for the direct problem
+      double precision C(3,4)
+*          azi1, lon2, azi2
+      data C /
+     +    +0d0, +180, +180 ,
+     +    -0d0, -180, -180 ,
+     +    +180 , +180, +0d0,
+     +    -180 , -180, -0d0 /
+      double precision a, f
+      double precision lat2, lon2, azi2, a12, m12, MM12, MM21, SS12
+      integer i, k, equiv
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+
+      i = 0
+
+      do k = 1, 4
+        call direct(a, f, 0d0, 0d0, C(1, k), 15d6,
+     +      2, lat2, lon2, azi2, 0, a12, m12, MM12, MM21, SS12)
+        i = i + equiv(lon2, C(2, k)) + equiv(azi2, C(3, k))
+      end do
+
+      tst5 = i
+
+      return
+      end
+
       program signtest
       integer n, i
-      integer chrnd, chsc, chat, chsm, chnm, chdf
+      integer chrnd, chsc, chat, chsm, chnm, chdf,
+     +    tst1, tst2, tst3, tst4, tst5
 
       n = 0
       call geoini
@@ -407,6 +546,37 @@
       if (i .gt. 0) then
         n = n + 1
         print *, 'AngDiff fail:', i
+      end if
+
+      i = tst1()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'inverse coincident points on equator fail:', i
+      end if
+
+      i = tst2()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'inverse nearly antipodal points on equator fail:', i
+      end if
+
+      i = tst3()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'inverse antipodal points on equator fail:', i
+      end if
+
+      i = tst4()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'inverse antipodal points on equator, prolate, fail:',
+     +      i
+      end if
+
+      i = tst5()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'direct azi1 = +/-0 +/-180, fail:', i
       end if
 
       if (n .gt. 0) then
