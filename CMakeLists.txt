@@ -9,7 +9,10 @@ if (PROJECT_VERSION_PATCH GREATER 0)
   set (PROJECT_VERSION "${PROJECT_VERSION}.${PROJECT_VERSION_PATCH}")
 endif ()
 
-cmake_minimum_required (VERSION 3.1.0)
+cmake_minimum_required (VERSION 3.13.0)
+
+option (CONVERT_WARNINGS_TO_ERRORS "Convert warnings into errors?" OFF)
+option (BUILD_DOCUMENTATION "Use doxygen to create the documentation" OFF)
 
 # Set a default build type for single-configuration cmake generators if
 # no build type is set.
@@ -47,26 +50,28 @@ if (CONVERT_WARNINGS_TO_ERRORS)
 endif ()
 
 set (LIBNAME geodfor)
-set (TOOLS geoddirect geodinverse planimeter geodtest)
+set (TOOLS geoddirect geodinverse planimeter)
 # Work alikes for NGS geodesic tools.  This uses legacy code from NGS
 # and so they trigger multiple errors and warnings if compiled with the
 # compile flags above.
 set (NGSTOOLS ngsforward ngsinverse)
+set (TESTS geodtest signtest)
 
 if (MSVC OR CMAKE_CONFIGURATION_TYPES)
   # Add _d suffix for your debug versions of the tools
-  set_target_properties (${TOOLS} PROPERTIES
-    DEBUG_POSTFIX _d)
+  set_target_properties (${TOOLS} PROPERTIES DEBUG_POSTFIX _d)
 endif ()
 
 add_subdirectory (src)
 add_subdirectory (tools)
+add_subdirectory (tests)
 
 # Turn on testing
 enable_testing ()
 
 # Run the test suite
 add_test (NAME geodtest COMMAND geodtest)
+add_test (NAME signtest COMMAND signtest)
 
 # The documentation depends on doxygen.
 if (BUILD_DOCUMENTATION)

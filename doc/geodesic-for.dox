@@ -11,10 +11,10 @@
 /**
 \mainpage Geodesic routines implemented in Fortran
 \author Charles F. F. Karney (charles@karney.com)
-\version 1.52
+\version 2.0
 
 The documentation for other versions is available at
-<tt>https://geographiclib.sourceforge.io/m.nn/Fortran</tt> for versions numbers
+<tt>https://geographiclib.sourceforge.io/Fortran/m.n/</tt> for version numbers
 <tt>m.nn</tt> &ge; 1.28.
 
 \section abstract-for Abstract
@@ -173,6 +173,10 @@ and are therefore in the public domain.
   Geodesics on an ellipsoid</a>.
 
 \section changes-for Change log
+
+ - <a href="https://geographiclib.sourceforge.io/1.52/Fortran">Version 2.0</a>
+   (released 2022-mm-dd)
+   - Lots of changes.
 
  - <a href="https://geographiclib.sourceforge.io/1.52/Fortran">Version 1.52</a>
    (released 2021-06-22)

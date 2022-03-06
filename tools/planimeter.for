@@ -3,7 +3,7 @@
 
 *> A simple program to compute the area of a geodesic polygon.
 *!
-*! This program reads in up to 1000 lines with lat, lon for each vertex
+*! This program reads in up to 10000 lines with lat, lon for each vertex
 *! of a polygon.  At the end of input, the program prints the number of
 *! vertices, the perimeter of the polygon and its area (for the WGS84
 *! ellipsoid).

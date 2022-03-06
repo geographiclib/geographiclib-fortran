@@ -1042,24 +1042,19 @@
 * output
       integer major, minor, patch
 
-      major = 1
-      minor = 52
+      major = 2
+      minor = 0
       patch = 0
 
       return
       end
 
-*> @cond SKIP
-
-      block data geodat
-      double precision dblmin, dbleps, pi, degree, tiny,
-     +    tol0, tol1, tol2, tolb, xthrsh
-      integer digits, maxit1, maxit2
-      logical init
-      data init /.false./
-      common /geocom/ dblmin, dbleps, pi, degree, tiny,
-     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
-      end
+*> Initialize some constants.
+*!
+*! This routine is called by the main geodesic routines to initialize
+*! some constants, so usually there's no need for it to be called
+*! explicitly.  However, if accessing some of the other routines, it may
+*! need to be called first.
 
       subroutine geoini
       double precision dblmin, dbleps, pi, degree, tiny,
@@ -1095,6 +1090,18 @@
       init = .true.
 
       return
+      end
+
+*> @cond SKIP
+
+      block data geodat
+      double precision dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh
+      integer digits, maxit1, maxit2
+      logical init
+      data init /.false./
+      common /geocom/ dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
       end
 
       subroutine Lengs(eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2,
@@ -1907,7 +1914,11 @@
       vpp = sumx - up
       up = up - u
       vpp = vpp - v
-      t = -(up + vpp)
+      if (sumx .eq. 0) then
+        t = sumx
+      else
+        t = 0d0 - (up + vpp)
+      end if
 
       return
       end
@@ -1934,8 +1945,8 @@
 
       double precision remx
       AngNm = remx(x, 360d0)
-      if (AngNm .eq. -180) then
-        AngNm = 180
+      if (abs(AngNm) .eq. 180) then
+        AngNm = sign(180d0, x)
       end if
 
       return
@@ -1964,12 +1975,17 @@
 * output
       double precision e
 
-      double precision d, t, sumx, AngNm
-      d = AngNm(sumx(AngNm(-x), AngNm(y), t))
-      if (d .eq. 180 .and. t .gt. 0) then
-        d = -180
+      double precision d, t, sumx, remx
+      d = sumx(remx(-x, 360d0), remx(y, 360d0), t)
+      d = sumx(remx(d, 360d0), t, e)
+      if (d .eq. 0 .or. abs(d) .eq. 180) then
+        if (e .eq. 0) then
+          d = sign(d, y - x)
+        else
+          d = sign(d, -e)
+        end if
       end if
-      AngDif = sumx(d, t, e)
+      AngDif = d
 
       return
       end
@@ -1979,8 +1995,7 @@
 * for reals = 0.7 pm on the earth if x is an angle in degrees.  (This is
 * about 1000 times more resolution than we get with angles around 90
 * degrees.)  We use this to avoid having to deal with near singular
-* cases when x is non-zero but tiny (e.g., 1.0e-200).  This also
-* converts -0 to +0.
+* cases when x is non-zero but tiny (e.g., 1.0e-200).
 * input
       double precision x
 
@@ -1990,7 +2005,6 @@
 * The compiler mustn't "simplify" z - (z - y) to y
       if (y .lt. z) y = z - (z - y)
       AngRnd = sign(y, x)
-      if (x .eq. 0) AngRnd = 0
 
       return
       end
@@ -2210,10 +2224,10 @@
         cosx =  s
       end if
 
-      if (x .ne. 0) then
-        sinx = 0d0 + sinx
-        cosx = 0d0 + cosx
+      if (sinx .eq. 0) then
+        sinx = sign(sinx, x)
       end if
+      cosx = 0d0 + cosx
 
       return
       end
@@ -2246,15 +2260,11 @@
       end if
       atn2dx = atan2(yy, xx) / degree
       if (q .eq. 1) then
-        if (yy .ge. 0) then
-          atn2dx =  180 - atn2dx
-        else
-          atn2dx = -180 - atn2dx
-        end if
+        atn2dx = sign(180d0, y) - atn2dx
       else if (q .eq. 2) then
-        atn2dx =  90 - atn2dx
+        atn2dx =       90       - atn2dx
       else if (q .eq. 3) then
-        atn2dx = -90 + atn2dx
+        atn2dx =      -90       + atn2dx
       end if
 
       return
