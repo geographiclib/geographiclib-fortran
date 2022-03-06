@@ -3,4 +3,3 @@ Version update checks
 # Fortran
 #   legacy/Fortran/geodesic.for comment + geover
 #   doc/geodesic-for.dox (date + update change log)
-
