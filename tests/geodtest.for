@@ -1179,7 +1179,7 @@
       end
 
       integer function tstp12()
-* AA of arctic circle (not really -- adjunct to rhumb-AA test)
+* Area of arctic circle (not really -- adjunct to rhumb-area test)
       double precision lat(3), lon(3)
       data lat / 66.562222222d0, 66.562222222d0, 66.562222222d0 /
       data lon / 0d0, 180d0, 360d0 /
@@ -1197,6 +1197,28 @@
       r = r + assert(AA, 0d0, 1d0)
 
       tstp12 = r
+      return
+      end
+
+      integer function tstp12r()
+* reverse area of arctic circle
+      double precision lat(3), lon(3)
+      data lat / 66.562222222d0, 66.562222222d0, 66.562222222d0 /
+      data lon / -0d0, -180d0, -360d0 /
+      double precision a, f, AA, PP
+      integer r, assert
+      include 'geodesic.inc'
+
+* WGS84 values
+      a = 6378137d0
+      f = 1/298.257223563d0
+      r = 0
+
+      call area(a, f, lat, lon, 3, AA, PP)
+      r = r + assert(PP, 10465729d0, 1d0)
+      r = r + assert(AA, 0d0, 1d0)
+
+      tstp12r = r
       return
       end
 
@@ -1314,7 +1336,8 @@
      +    tstg12, tstg14, tstg15, tstg17, tstg26, tstg28, tstg33,
      +    tstg55, tstg59, tstg61, tstg73, tstg74, tstg76, tstg78,
      +    tstg80, tstg84, tstg92, tstg94,
-     +    tstp0, tstp5, tstp6, tstp12, tstp13, tstp15, tstp19, tstp21
+     +    tstp0, tstp5, tstp6, tstp12, tstp12r, tstp13, tstp15,
+     +    tstp19, tstp21
 
       n = 0
       i = tstinv()
@@ -1481,6 +1504,11 @@
       if (i .gt. 0) then
         n = n + 1
         print *, 'tstp12 fail:', i
+      end if
+      i = tstp12r()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'tstp12r fail:', i
       end if
       i = tstp13()
       if (i .gt. 0) then

@@ -12,9 +12,9 @@
 *!   J. Geodesy <b>87</b>, 43--55 (2013);
 *!   DOI: <a href="https://doi.org/10.1007/s00190-012-0578-z">
 *!   10.1007/s00190-012-0578-z</a>;
-*!   addenda: <a href=
+*!   <a href=
 *!   "https://geographiclib.sourceforge.io/misc/geod-addenda.html">
-*!   geod-addenda.html</a>.
+*!   addenda</a>.
 *! .
 *! The principal advantages of these algorithms over previous ones
 *! (e.g., Vincenty, 1975) are
@@ -2122,11 +2122,13 @@
       lon12 = AngDif(lon1, lon2, e)
       lon1x = AngNm(lon1)
       lon2x = AngNm(lon2)
-      trnsit = 0
-      if (lon1x .le. 0 .and. lon2x .gt. 0 .and. lon12 .gt. 0) then
+      if (lon12 .gt. 0 .and. ((lon1x .lt. 0 .and. lon2x .ge. 0) .or.
+     +                        (lon1x .gt. 0 .and. lon2x .eq. 0))) then
         trnsit = 1
-      else if (lon2x .le. 0 .and. lon1x .gt. 0 .and. lon12 .lt. 0) then
+      else if (lon12 .lt. 0 .and. lon1x .ge. 0 .and. lon2x .lt. 0) then
         trnsit = -1
+      else
+        trnsit = 0
       end if
 
       return
