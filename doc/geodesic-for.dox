@@ -12,10 +12,10 @@
 \mainpage Geodesic routines implemented in Fortran
 \author Charles F. F. Karney (charles@karney.com)
 \version 2.0
+\date 2022-mm-dd
 
 The documentation for other versions is available at
-<tt>https://geographiclib.sourceforge.io/Fortran/m.n/</tt> for version numbers
-<tt>m.nn</tt> &ge; 1.28.
+<tt>https://geographiclib.sourceforge.io/Fortran</tt>.
 
 \section abstract-for Abstract
 
@@ -26,31 +26,159 @@ for an ellipsoid of revolution in a Fortran program.  It is written in
 Fortran 77 (avoiding features which are now deprecated) and should
 compile correctly with just about any Fortran compiler.
 
-\section download-for Downloading the source
-
-The Fortran library is part of GeographicLib which available for download at
-- <a href="https://sourceforge.net/projects/geographiclib/files/distrib/GeographicLib-1.52.tar.gz">
-  GeographicLib-1.52.tar.gz</a>
-- <a href="https://sourceforge.net/projects/geographiclib/files/distrib/GeographicLib-1.52.zip">
-  GeographicLib-1.52.zip</a>
+This an implementation in Fortran of the geodesic algorithms described in
+- C. F. F. Karney,
+  <a href="https://doi.org/10.1007/s00190-012-0578-z">
+  Algorithms for geodesics</a>,
+  J. Geodesy <b>87</b>, 43--55 (2013);
+  <a href="https://geographiclib.sourceforge.io/misc/geod-addenda.html">
+  addenda</a>.
 .
-as either a compressed tar file (tar.gz) or a zip file.  After unpacking
-the source, the Fortran library can be found in the directory
-<tt>legacy/Fortran</tt>.  The library consists of the file
-geodesic.for.  The Fortran-90 interface is defined in geodesic.inc.
+Other links
+- Library documentation (all version):
+  https://geographiclib.sourceforge.io/Fortran
+- GIT repository: https://github.com/geographiclib/geographiclib-fortran
+- Source distribution:
+  https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
+- GeographicLib: https://geographiclib.sourceforge.io
+- Other implementations in:
+  <a href="https://geographiclib.sourceforge.io/C++/doc">C++</a>,
+  <a href="https://geographiclib.sourceforge.io/C/doc">C</a>,
+  <a href="https://geographiclib.sourceforge.io/Python/doc">Python</a>,
+  <a href="https://geographiclib.sourceforge.io/JavaScript/doc">JavaScript</a>,
+  <a href="https://geographiclib.sourceforge.io/Java/doc">Java</a>,
+  <a href="https://github.com/geographiclib/geographiclib-octave.git">
+  Octave/MATLAB</a>
+
+\section contents Contents
+ - \ref intro
+ - \ref standalone
+ - \ref library
+ - \ref changes
+
+\page intro Introduction to the geodesic problem
+
+The shortest path between two points on the ellipsoid at (\e lat1, \e
+lon1) and (\e lat2, \e lon2) is called the geodesic.  Its length is
+\e s12 and the geodesic from point 1 to point 2 has forward azimuths
+\e azi1 and \e azi2 at the two end points.
+
+Traditionally two geodesic problems are considered:
+- the direct problem -- given \e lat1, \e lon1, \e s12, and \e azi1,
+  determine \e lat2, \e lon2, and \e azi2.  This is solved by the function
+  geod_direct().
+- the inverse problem -- given \e lat1, \e lon1, and \e lat2, \e lon2,
+  determine \e s12, \e azi1, and \e azi2.  This is solved by the function
+  geod_inverse().
+
+The ellipsoid is specified by its equatorial radius \e a (typically in
+meters) and flattening \e f.  The routines are accurate to round off with
+double precision arithmetic provided that |<i>f</i>| &lt; 1/50; for the
+WGS84 ellipsoid, the errors are less than 15 nanometers.  (Reasonably
+accurate results are obtained for |<i>f</i>| &lt; 1/5.)  For a prolate
+ellipsoid, specify \e f &lt; 0.
+
+The routines also calculate several other quantities of interest
+- \e S12 is the area between the geodesic from point 1 to point 2 and the
+  equator; i.e., it is the area, measured counter-clockwise, of the
+  quadrilateral with corners (\e lat1,\e lon1), (0,\e lon1), (0,\e lon2),
+  and (\e lat2,\e lon2).
+- \e m12, the reduced length of the geodesic is defined such that if
+  the initial azimuth is perturbed by \e dazi1 (radians) then the
+  second point is displaced by \e m12 \e dazi1 in the direction
+  perpendicular to the geodesic.  On a curved surface the reduced
+  length obeys a symmetry relation, \e m12 + \e m21 = 0.  On a flat
+  surface, we have \e m12 = \e s12.
+- \e M12 and \e M21 are geodesic scales.  If two geodesics are
+  parallel at point 1 and separated by a small distance \e dt, then
+  they are separated by a distance \e M12 \e dt at point 2.  \e M21
+  is defined similarly (with the geodesics being parallel to one
+  another at point 2).  On a flat surface, we have \e M12 = \e M21
+  = 1.
+- \e a12 is the arc length on the auxiliary sphere.  This is a
+  construct for converting the problem to one in spherical
+  trigonometry.  \e a12 is measured in degrees.  The spherical arc
+  length from one equator crossing to the next is always 180&deg;.
+
+If points 1, 2, and 3 lie on a single geodesic, then the following
+addition rules hold:
+- \e s13 = \e s12 + \e s23
+- \e a13 = \e a12 + \e a23
+- \e S13 = \e S12 + \e S23
+- \e m13 = \e m12 \e M23 + \e m23 \e M21
+- \e M13 = \e M12 \e M23 &minus; (1 &minus; \e M12 \e M21) \e
+  m23 / \e m12
+- \e M31 = \e M32 \e M21 &minus; (1 &minus; \e M23 \e M32) \e
+  m12 / \e m23
+
+The shortest distance returned by the solution of the inverse problem is
+(obviously) uniquely defined.  However, in a few special cases there are
+multiple azimuths which yield the same shortest distance.  Here is a
+catalog of those cases:
+- \e lat1 = &minus;\e lat2 (with neither point at a pole).  If \e azi1 = \e
+  azi2, the geodesic is unique.  Otherwise there are two geodesics and the
+  second one is obtained by setting [\e azi1, \e azi2] &rarr; [\e azi2, \e
+  azi1], [\e M12, \e M21] &rarr; [\e M21, \e M12], \e S12 &rarr; &minus;\e
+  S12.  (This occurs when the longitude difference is near &plusmn;180&deg;
+  for oblate ellipsoids.)
+- \e lon2 = \e lon1 &plusmn; 180&deg; (with neither point at a pole).  If \e
+  azi1 = 0&deg; or &plusmn;180&deg;, the geodesic is unique.  Otherwise
+  there are two geodesics and the second one is obtained by setting [\e
+  azi1, \e azi2] &rarr; [&minus;\e azi1, &minus;\e azi2], \e S12 &rarr;
+  &minus;\e S12.  (This occurs when \e lat2 is near &minus;\e lat1 for
+  prolate ellipsoids.)
+- Points 1 and 2 at opposite poles.  There are infinitely many geodesics
+  which can be generated by setting [\e azi1, \e azi2] &rarr; [\e azi1, \e
+  azi2] + [\e d, &minus;\e d], for arbitrary \e d.  (For spheres, this
+  prescription applies when points 1 and 2 are antipodal.)
+- \e s12 = 0 (coincident points).  There are infinitely many geodesics which
+  can be generated by setting [\e azi1, \e azi2] &rarr; [\e azi1, \e azi2] +
+  [\e d, \e d], for arbitrary \e d.
+
+The area of a geodesic polygon can be determined by summing &minus;\e
+S12 for successive edges of the polygon (\e S12 is negated so that
+clockwise traversal of a polygon gives a positive area).  However, if
+the polygon encircles a pole, the sum must be adjusted by
+&plusmn;<i>A</i>/2, where \e A is the area of the full ellipsoid, with
+the sign chosen to place the result in (&minus;<i>A</i>/2, <i>A</i>/2].
+
+The principal advantages of these algorithms over previous ones (e.g.,
+Vincenty, 1975) are
+- accurate to round off for |<i>f</i>| &lt; 1/50;
+- the solution of the inverse problem is always found;
+- differential and integral properties of geodesics are computed.
+
+\page standalone Use as a standalone library
+
+Download the source code from as a tarball from
+
+- https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
+
+or check out the source code from
+
+- https://github.com/geographiclib/geographiclib-fortran.git
+
+Build the code with <a href="https://www.cmake.org">cmake</a>
+\verbatim
+cmake -B BUILD -S .
+cd BUILD
+make
+make test
+\endverbatim
+possibly including some options via <code>-D</code>:
+- <code>CONVERT_WARNINGS_TO_ERRORS</code> warnings are fatal (default ON)
+- <code>BUILD_DOCUMENTATION</code> look for doxgen and build
+  documentation (default ON)
+- <code>BUILD_SHARED_LIBS</code> make a shared (instead of static)
+  library (default ON)
+
+CMake code to *install* the library is not provided.
+
+The library consists of the file geodesic.for
 
 Licensed under the
 <a href="https://www.opensource.org/licenses/MIT">MIT/X11 License</a>; see
 <a href="https://geographiclib.sourceforge.io/html/LICENSE.txt">LICENSE.txt</a>.
-
-\section doc-for Library documentation
-
-Here is the
-\link geodesic.for <i>application programming interface</i>\endlink
-for the library (this is just the documentation for the source file,
-geodesic.for).
-
-\section samples-for Sample programs
 
 Also included are 3 small test programs:
  - geoddirect.for is a simple command line utility for solving the
@@ -62,17 +190,9 @@ Also included are 3 small test programs:
  .
 Here, for example, is geodinverse.for
 \include geodinverse.for
-To compile, link, and run this, you would typically use \verbatim
-f95 -o geodinverse geodinverse.for geodesic.for
-echo 30 0 29.5 179.5 | ./geodinverse \endverbatim
-These sample programs can also be built with the supplied cmake file,
-CMakeLists.txt, as follows \verbatim
-mkdir BUILD
-cd BUILD
-cmake ..
-make
-make test
-echo 30 0 29.5 179.5 | ./geodinverse \endverbatim
+Use geodinverse, for example, with
+\verbatim
+echo -30 0 29.5 179.5 | ./tools/geodinverse \endverbatim
 
 Finally, the two programs
  - ngsforward
@@ -97,7 +217,7 @@ are derived from the NGS source files
  .
 and are therefore in the public domain.
 
-\section library-for Using the library
+\page library Library documentation
 
 - Optionally put @code{.for}
   include "geodesic.inc"
@@ -107,74 +227,17 @@ and are therefore in the public domain.
   the library is documented in geodesic.for.
 - Compile and link as described above.
 
-\section external-for External links
+The documention of the library is given in the file, geodesic.for.
 
-- These algorithms are derived in C. F. F. Karney,
-  <a href="https://doi.org/10.1007/s00190-012-0578-z">
-  Algorithms for geodesics</a>,
-  J. Geodesy <b>87</b>, 43--55 (2013)
-  (<a href="https://geographiclib.sourceforge.io/geod-addenda.html"> addenda</a>).
-- A longer paper on geodesics: C. F. F. Karney,
-   <a href="https://arxiv.org/abs/1102.1215v1">Geodesics
-   on an ellipsoid of revolution</a>,
-   Feb. 2011
-   (<a href="https://geographiclib.sourceforge.io/geod-addenda.html#geod-errata">
-   errata</a>).
-- <a href="https://sourceforge.net/projects/geographiclib/">
-  Main project page</a>
-- <a href="https://geographiclib.sourceforge.io/">
-  GeographicLib web site</a>
-  - Documentation on the C++ classes: GeographicLib::Geodesic,
-    GeographicLib::GeodesicLine, GeographicLib::PolygonAreaT.
-  - The section in the GeographicLib documentation on geodesics.
-- <a href="https://sourceforge.net/p/geographiclib/code/ci/release/tree/">
-  git repository</a>
-- Implementations in various languages
-  - C++ (complete library):
-    <a href="../index.html">
-      documentation</a>,
-    <a href="https://sourceforge.net/projects/geographiclib/files/distrib">
-      download</a>;
-  - C (geodesic routines):
-    <a href="../C/index.html">
-      documentation</a>, also included with recent versions of
-    <a href="https://github.com/OSGeo/proj.4/wiki">
-      proj.4</a>;
-  - Fortran (geodesic routines):
-    <a href="../Fortran/index.html">
-      documentation</a>;
-  - Java (geodesic routines):
-    <a href="https://repo1.maven.org/maven2/net/sf/geographiclib/GeographicLib-Java/">
-      Maven Central package</a>,
-    <a href="../java/index.html">
-      documentation</a>;
-  - JavaScript (geodesic routines):
-    <a href="https://www.npmjs.com/package/geographiclib">
-      npm package</a>,
-    <a href="../js/index.html">
-      documentation</a>;
-  - Python (geodesic routines):
-    <a href="https://pypi.python.org/pypi/geographiclib">
-      PyPI package</a>,
-    <a href="../python/index.html">
-      documentation</a>;
-  - Matlab/Octave (geodesic and some other routines):
-    <a href="https://www.mathworks.com/matlabcentral/fileexchange/50605">
-      Matlab Central package</a>,
-    <a href="https://viewer.mathworks.com/?viewer=plain_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2Fsubmissions%2F50605%2Fversions%2F15%2Fcontents%2FContents.m">
-      documentation</a>;
-  - C# (.NET wrapper for complete C++ library):
-    <a href="../NET/index.html">
-      documentation</a>.
-- <a href="https://geographiclib.sourceforge.io/geodesic-papers/biblio.html">
-  A geodesic bibliography</a>.
-- The wikipedia page,
-  <a href="https://en.wikipedia.org/wiki/Geodesics_on_an_ellipsoid">
-  Geodesics on an ellipsoid</a>.
+Here is a brief summary of the functions.
+- Call direct() to solve the direct geodesic problme.
+- Call invers() to solve the inverse geodesic problem.
+- Call area() to find the area of a geodesic polygon.
+- geover() returns the version numbers of the library.
 
-\section changes-for Change log
+\page changes Change log
 
- - <a href="https://geographiclib.sourceforge.io/1.52/Fortran">Version 2.0</a>
+ - <a href="https://geographiclib.sourceforge.io/Fortran/2.0">Version 2.0</a>
    (released 2022-mm-dd)
    - Lots of changes.
 

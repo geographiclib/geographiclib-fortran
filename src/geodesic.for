@@ -114,12 +114,9 @@
 *! restructuring the internals of the Fortran code since this may make
 *! porting fixes from the C++ code more difficult.
 *!
-*! Copyright (c) Charles Karney (2012-2021) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2012-2022) <charles@karney.com> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
-*!
-*! This library was distributed with
-*! <a href="../index.html">GeographicLib</a> 1.52.
 
 *> Solve the direct geodesic problem
 *!
@@ -727,7 +724,7 @@
       end if
 
       omg12 = 0
-* somg12 > 1 marks that it needs to be calculated
+* somg12 = 2 marks that it needs to be calculated
       somg12 = 2
       comg12 = 0
       if (.not. merid .and. sbet1 .eq. 0 .and.
@@ -887,7 +884,7 @@
           SS12 = 0
         end if
 
-        if (.not. merid .and. somg12 .gt. 1) then
+        if (.not. merid .and. somg12 .eq. 2) then
           somg12 = sin(omg12)
           comg12 = cos(omg12)
         end if

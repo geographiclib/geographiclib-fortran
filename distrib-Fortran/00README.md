@@ -1,11 +1,7 @@
 # Fortran implementation of the geodesic routines in GeographicLib
 
-This is a library to solve geodesic problems on an ellipsoid model of
-the earth.
-
-The two tools ngsforward and ngsinverse are replacements for the tools
-FORWARD and INVERSE available from the
-[NGS](http://www.ngs.noaa.gov/PC_PROD/Inv_Fwd/)
+This directory provide source packages for the library.  Programmers
+should download the latest `.tar.gz` file.
 
 The algorithms are documented in
 

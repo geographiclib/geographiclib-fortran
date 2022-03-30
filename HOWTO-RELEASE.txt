@@ -1,5 +1,31 @@
+CMake options
+  CONVERT_WARNINGS_TO_ERRORS = ON
+  BUILD_DOCUMENTATION = ON
+  BUILD_SHARED_LIBS = ON
+
+Targets
+  all test
+  doc (if BUILD_DOCUMENTATION and doxygen found)
+  dist (makes package_source and checks for unwanted files)
+  sanitize
+  stage-{doc,dist}
+  deploy-{doc,dist}
+
+not supported:
+  install (no distribution envisioned)
+  package
+
+Version update checks
+
+Add PROJECT_VERSION_SUFFIX = "-alpha" to
+  tar package of source
+
+Do not add PROJECT_VERSION_SUFFIX to
+  unpack directory for tar package
+  documentation
+
 Version update checks
 
 # Fortran
-#   legacy/Fortran/geodesic.for comment + geover
+#   src/geodesic.for geover
 #   doc/geodesic-for.dox (date + update change log)

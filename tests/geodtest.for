@@ -3,7 +3,7 @@
 *!
 *! Run these tests by configuring with cmake and running "make test".
 *!
-*! Copyright (c) Charles Karney (2015-2021) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2015-2022) <charles@karney.com> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
 
@@ -1082,6 +1082,29 @@
       return
       end
 
+      integer function tstg96()
+* Failure with long doubles found with test case from Nowak + Nowak Da
+* Costa (2022).  Problem was using somg12 > 1 as a test that it needed
+* to be set when roundoff could result in somg12 slightly bigger that 1.
+* Found + fixed 2022-03-30.
+
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      double precision a, f
+      integer r, assert, omask
+      include 'geodesic.inc'
+
+      a = 6378137d0
+      f = 1/298.257222101d0
+      omask = 8
+      r = 0
+      call invers(a,f, 0d0,0d0, 60.0832522871723d0, 89.8492185074635d0,
+     +    s12, azi1, azi2, omask, a12, m12, MM12, MM21, SS12)
+      r = r + assert(SS12, 42426932221845d0, 0.5d0)
+
+      tstg96 = r
+      return
+      end
+
       integer function tstp0()
 * Check fix for pole-encircling bug found 2011-03-16
       double precision lata(4), lona(4)
@@ -1335,7 +1358,7 @@
      +    tstg0, tstg1, tstg2, tstg5, tstg6, tstg9, tstg10, tstg11,
      +    tstg12, tstg14, tstg15, tstg17, tstg26, tstg28, tstg33,
      +    tstg55, tstg59, tstg61, tstg73, tstg74, tstg76, tstg78,
-     +    tstg80, tstg84, tstg92, tstg94,
+     +    tstg80, tstg84, tstg92, tstg94, tstg96,
      +    tstp0, tstp5, tstp6, tstp12, tstp12r, tstp13, tstp15,
      +    tstp19, tstp21
 
@@ -1484,6 +1507,11 @@
       if (i .gt. 0) then
         n = n + 1
         print *, 'tstg94 fail:', i
+      end if
+      i = tstg96()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'tstg96 fail:', i
       end if
       i = tstp0()
       if (i .gt. 0) then

@@ -8,11 +8,16 @@ set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 if (PROJECT_VERSION_PATCH GREATER 0)
   set (PROJECT_VERSION "${PROJECT_VERSION}.${PROJECT_VERSION_PATCH}")
 endif ()
-
+set (PROJECT_VERSION_SUFFIX "-alpha")
+set (PROJECT_FULLVERSION ${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX})
 cmake_minimum_required (VERSION 3.13.0)
 
-option (CONVERT_WARNINGS_TO_ERRORS "Convert warnings into errors?" OFF)
-option (BUILD_DOCUMENTATION "Use doxygen to create the documentation" OFF)
+set (PACKAGE_DIR "${PROJECT_NAME}-${PROJECT_VERSION}")
+set (PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_FULLVERSION}")
+
+option (CONVERT_WARNINGS_TO_ERRORS "Convert warnings into errors?" ON)
+option (BUILD_DOCUMENTATION "Use doxygen to create the documentation" ON)
+option (BUILD_SHARED_LIBS "Build as a shared library" ON)
 
 # Set a default build type for single-configuration cmake generators if
 # no build type is set.
@@ -36,7 +41,7 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
   if (MSVC)
     set (CMAKE_Fortran_FLAGS
       "${CMAKE_Fortran_FLAGS} /fp:precise /Qdiag-disable:11074,11076")
-    set (CMAKE_Fortan_FLAGS
+    set (CMAKE_Fortran_FLAGS
       "${CMAKE_Fortran_FLAGS} -fp-model precise -diag-disable=11074,11076")
   endif ()
 endif ()
@@ -77,26 +82,106 @@ add_test (NAME signtest COMMAND signtest)
 if (BUILD_DOCUMENTATION)
   set (DOXYGEN_SKIP_DOT ON)
   # Version 1.8.7 or later needed for &hellip;
-  find_package (Doxygen 1.8.7 REQUIRED)
-  add_subdirectory (doc)
+  find_package (Doxygen 1.8.7)
+  if (DOXYGEN_FOUND)
+    add_subdirectory (doc)
+  else ()
+    message (WARNING "Doxygen not found, not building the documentation")
+    set (BUILD_DOCUMENTATION OFF)
+  endif ()
 endif ()
 
-if (EXISTS ${PROJECT_SOURCE_DIR}/.git AND NOT WIN32)
+if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/.git AND NOT WIN32)
   add_custom_target (checktrailingspace
-    COMMAND git ls-tree -r HEAD --name-only | xargs grep ' $$' || true
+    COMMAND git ls-files | xargs grep ' $$' || true
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Looking for trailing spaces")
   add_custom_target (checktabs
-    COMMAND git ls-tree -r HEAD --name-only | xargs grep '\t' || true
+    COMMAND git ls-files | xargs grep '\t' || true
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Looking for tabs")
   add_custom_target (checkblanklines
-    COMMAND git ls-tree -r HEAD --name-only |
+    COMMAND git ls-files |
     while read f\; do tr 'X\\n' 'YX' < $$f |
     egrep '\(^X|XXX|XX$$|[^X]$$\)' > /dev/null && echo $$f\; done || true
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Looking for extra blank lines")
 
-  add_custom_target(sanitize)
-  add_dependencies(sanitize checktrailingspace checktabs checkblanklines)
+  add_custom_target (sanitize)
+  add_dependencies (sanitize checktrailingspace checktabs checkblanklines)
+endif ()
+
+# The configuration of CPack is via variables that need to be set before
+# the include (CPack).
+set (CPACK_PACKAGE_CONTACT charles@karney.com)
+set (CPACK_PACKAGE_VENDOR "GeographicLib-Fortran")
+set (CPACK_PACKAGE_DESCRIPTION_SUMMARY
+  "GeographicLib Fortran library and documentation")
+# The list of files to be excluded from the source distribution.
+set (CPACK_SOURCE_IGNORE_FILES
+  "#"
+  "~\$"
+  "/\\\\.git"
+  "${PROJECT_SOURCE_DIR}/BUILD"
+  "${PROJECT_SOURCE_DIR}/distrib-Fortran")
+set (CPACK_SOURCE_GENERATOR TGZ)
+
+set (CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set (CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+
+set (CPACK_SOURCE_PACKAGE_FILE_NAME "${PACKAGE_DIR}")
+set (CPACK_PACKAGE_INSTALL_DIRECTORY "${PACKAGE_DIR}")
+
+include (CPack)
+
+if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/.git)
+
+  set (DISTRIB_DIR "${CMAKE_BINARY_DIR}/distrib")
+  add_custom_target (dist
+    COMMAND ${CMAKE_MAKE_PROGRAM} package_source
+    COMMAND ${CMAKE_COMMAND} -E
+    copy ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz
+    ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
+    COMMAND
+    cd _CPack_Packages/Linux-Source/TGZ/${CPACK_PACKAGE_INSTALL_DIRECTORY} &&
+    find -type f | cut -f2- -d/ | sort > ${DISTRIB_DIR}/package.list &&
+    cd ${PROJECT_SOURCE_DIR} &&
+    git ls-files | sort > ${DISTRIB_DIR}/git.list &&
+    comm -23 ${DISTRIB_DIR}/package.list ${DISTRIB_DIR}/git.list
+    > ${DISTRIB_DIR}/unwanted.list &&
+    if test -s ${DISTRIB_DIR}/unwanted.list\; then
+    echo "WARNING: Unwanted files in source package" &&
+    cat ${DISTRIB_DIR}/unwanted.list\; fi &&
+    echo "created distrib/${PACKAGE_NAME}.tar.gz")
+
+  find_program (RSYNC rsync)
+  if (RSYNC)
+    set (USER karney)
+    set (DATAROOT $ENV{HOME}/web/geographiclib-files/distrib-Fortran)
+    set (DOCROOT $ENV{HOME}/web/geographiclib-web/htdocs/Fortran)
+    set (FRSDEPLOY ${USER}@frs.sourceforge.net:/home/frs/project/geographiclib)
+    set (WEBDEPLOY ${USER},geographiclib@web.sourceforge.net:./htdocs)
+
+    add_custom_target (stage-dist
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
+      ${PROJECT_SOURCE_DIR}/distrib-Fortran/
+      COMMAND ${RSYNC} --delete -a --exclude '*~'
+      ${PROJECT_SOURCE_DIR}/distrib-Fortran/ ${DATAROOT}/)
+    add_dependencies (stage-dist dist)
+
+    if (BUILD_DOCUMENTATION)
+      add_custom_target (stage-doc
+        COMMAND ${RSYNC} --delete -a
+        doc/html/ ${DOCROOT}/${PROJECT_VERSION}/)
+      add_dependencies (stage-doc doc)
+    endif ()
+
+    add_custom_target (deploy-dist
+      COMMAND ${RSYNC} --delete -av ${DATAROOT} ${FRSDEPLOY}/)
+    add_custom_target (deploy-doc
+      COMMAND ${RSYNC} --delete -av -e ssh ${DOCROOT} ${WEBDEPLOY}/)
+  endif ()
+
 endif ()
