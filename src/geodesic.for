@@ -12,8 +12,9 @@
 *!   J. Geodesy <b>87</b>, 43--55 (2013);
 *!   DOI: <a href="https://doi.org/10.1007/s00190-012-0578-z">
 *!   10.1007/s00190-012-0578-z</a>;
-*!   addenda: <a href="https://geographiclib.sourceforge.io/geod-addenda.html">
-*!   geod-addenda.html</a>.
+*!   <a href=
+*!   "https://geographiclib.sourceforge.io/geod-addenda.html">
+*!   addenda</a>.
 *! .
 *! The principal advantages of these algorithms over previous ones
 *! (e.g., Vincenty, 1975) are
@@ -113,12 +114,9 @@
 *! restructuring the internals of the Fortran code since this may make
 *! porting fixes from the C++ code more difficult.
 *!
-*! Copyright (c) Charles Karney (2012-2021) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2012-2022) <charles@karney.com> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
-*!
-*! This library was distributed with
-*! <a href="../index.html">GeographicLib</a> 1.52.
 
 *> Solve the direct geodesic problem
 *!
@@ -602,27 +600,21 @@
 * If very close to being on the same half-meridian, then make it so.
       lon12 = AngDif(lon1, lon2, lon12s)
 * Make longitude difference positive.
-      if (lon12 .ge. 0) then
-        lonsgn = 1
-      else
-        lonsgn = -1
-      end if
-      lon12 = lonsgn * AngRnd(lon12)
-      lon12s = AngRnd((180 - lon12) - lonsgn * lon12s)
+      lonsgn = int(sign(1d0, lon12))
+      lon12 = lonsgn * lon12
+      lon12s = lonsgn * lon12s
       lam12 = lon12 * degree
-      if (lon12 .gt. 90) then
-        call sncsdx(lon12s, slam12, clam12)
-        clam12 = -clam12
-      else
-        call sncsdx(lon12, slam12, clam12)
-      end if
+* Calculate sincos of lon12 + error (this applies AngRound internally).
+      call sncsde(lon12, lon12s, slam12, clam12)
+* the supplementary longitude difference
+      lon12s = (180 - lon12) - lon12s
 
 * If really close to the equator, treat as on equator.
       lat1x = AngRnd(LatFix(lat1))
       lat2x = AngRnd(LatFix(lat2))
 * Swap points so that point with higher (abs) latitude is point 1
 * If one latitude is a nan, then it becomes lat1.
-      if (abs(lat1x) .lt. abs(lat2x)) then
+      if (abs(lat1x) .lt. abs(lat2x) .or. lat2x .ne. lat2x) then
         swapp = -1
       else
         swapp = 1
@@ -632,11 +624,7 @@
         call swap(lat1x, lat2x)
       end if
 * Make lat1 <= 0
-      if (lat1x .lt. 0) then
-        latsgn = 1
-      else
-        latsgn = -1
-      end if
+      latsgn = int(sign(1d0, -lat1x))
       lat1x = lat1x * latsgn
       lat2x = lat2x * latsgn
 * Now we have
@@ -704,8 +692,8 @@
         csig2 = calp2 * cbet2
 
 * sig12 = sig2 - sig1
-        sig12 = atan2(0d0 + max(0d0, csig1 * ssig2 - ssig1 * csig2),
-     +                               csig1 * csig2 + ssig1 * ssig2)
+        sig12 = atan2(max(0d0, csig1 * ssig2 - ssig1 * csig2) + 0d0,
+     +                         csig1 * csig2 + ssig1 * ssig2)
         call Lengs(n, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2,
      +      cbet1, cbet2, lmask,
      +      s12x, m12x, dummy, MM12, MM21, ep2, Ca)
@@ -736,7 +724,7 @@
       end if
 
       omg12 = 0
-* somg12 > 1 marks that it needs to be calculated
+* somg12 = 2 marks that it needs to be calculated
       somg12 = 2
       comg12 = 0
       if (.not. merid .and. sbet1 .eq. 0 .and.
@@ -896,7 +884,7 @@
           SS12 = 0
         end if
 
-        if (.not. merid .and. somg12 .gt. 1) then
+        if (.not. merid .and. somg12 .eq. 2) then
           somg12 = sin(omg12)
           comg12 = cos(omg12)
         end if
@@ -1042,24 +1030,19 @@
 * output
       integer major, minor, patch
 
-      major = 1
-      minor = 52
+      major = 2
+      minor = 0
       patch = 0
 
       return
       end
 
-*> @cond SKIP
-
-      block data geodat
-      double precision dblmin, dbleps, pi, degree, tiny,
-     +    tol0, tol1, tol2, tolb, xthrsh
-      integer digits, maxit1, maxit2
-      logical init
-      data init /.false./
-      common /geocom/ dblmin, dbleps, pi, degree, tiny,
-     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
-      end
+*> Initialize some constants.
+*!
+*! This routine is called by the main geodesic routines to initialize
+*! some constants, so usually there's no need for it to be called
+*! explicitly.  However, if accessing some of the other routines, it may
+*! need to be called first.
 
       subroutine geoini
       double precision dblmin, dbleps, pi, degree, tiny,
@@ -1095,6 +1078,18 @@
       init = .true.
 
       return
+      end
+
+*> @cond SKIP
+
+      block data geodat
+      double precision dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh
+      integer digits, maxit1, maxit2
+      logical init
+      data init /.false./
+      common /geocom/ dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
       end
 
       subroutine Lengs(eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2,
@@ -1539,12 +1534,12 @@
 * norm2x(somg2, comg2); -- don't need to normalize!
 
 * sig12 = sig2 - sig1, limit to [0, pi]
-      sig12 = atan2(0d0 + max(0d0, csig1 * ssig2 - ssig1 * csig2),
-     +                             csig1 * csig2 + ssig1 * ssig2)
+      sig12 = atan2(max(0d0, csig1 * ssig2 - ssig1 * csig2) + 0d0,
+     +                       csig1 * csig2 + ssig1 * ssig2)
 
 * omg12 = omg2 - omg1, limit to [0, pi]
-      somg12 = 0d0 + max(0d0, comg1 * somg2 - somg1 * comg2)
-      comg12 =                comg1 * comg2 + somg1 * somg2
+      somg12 = max(0d0, comg1 * somg2 - somg1 * comg2) + 0d0
+      comg12 =          comg1 * comg2 + somg1 * somg2
 * eta = omg12 - lam120
       eta = atan2(somg12 * clm120 - comg12 * slm120,
      +    comg12 * clm120 + somg12 * slm120)
@@ -1907,7 +1902,11 @@
       vpp = sumx - up
       up = up - u
       vpp = vpp - v
-      t = -(up + vpp)
+      if (sumx .eq. 0) then
+        t = sumx
+      else
+        t = 0d0 - (up + vpp)
+      end if
 
       return
       end
@@ -1934,8 +1933,8 @@
 
       double precision remx
       AngNm = remx(x, 360d0)
-      if (AngNm .eq. -180) then
-        AngNm = 180
+      if (abs(AngNm) .eq. 180) then
+        AngNm = sign(180d0, x)
       end if
 
       return
@@ -1964,12 +1963,17 @@
 * output
       double precision e
 
-      double precision d, t, sumx, AngNm
-      d = AngNm(sumx(AngNm(-x), AngNm(y), t))
-      if (d .eq. 180 .and. t .gt. 0) then
-        d = -180
+      double precision d, t, sumx, remx
+      d = sumx(remx(-x, 360d0), remx(y, 360d0), t)
+      d = sumx(remx(d, 360d0), t, e)
+      if (d .eq. 0 .or. abs(d) .eq. 180) then
+        if (e .eq. 0) then
+          d = sign(d, y - x)
+        else
+          d = sign(d, -e)
+        end if
       end if
-      AngDif = sumx(d, t, e)
+      AngDif = d
 
       return
       end
@@ -1979,8 +1983,7 @@
 * for reals = 0.7 pm on the earth if x is an angle in degrees.  (This is
 * about 1000 times more resolution than we get with angles around 90
 * degrees.)  We use this to avoid having to deal with near singular
-* cases when x is non-zero but tiny (e.g., 1.0e-200).  This also
-* converts -0 to +0.
+* cases when x is non-zero but tiny (e.g., 1.0e-200).
 * input
       double precision x
 
@@ -1990,7 +1993,6 @@
 * The compiler mustn't "simplify" z - (z - y) to y
       if (y .lt. z) y = z - (z - y)
       AngRnd = sign(y, x)
-      if (x .eq. 0) AngRnd = 0
 
       return
       end
@@ -2114,14 +2116,16 @@
       double precision lon1, lon2
 
       double precision lon1x, lon2x, lon12, AngNm, AngDif, e
+      lon12 = AngDif(lon1, lon2, e)
       lon1x = AngNm(lon1)
       lon2x = AngNm(lon2)
-      lon12 = AngDif(lon1x, lon2x, e)
-      trnsit = 0
-      if (lon1x .le. 0 .and. lon2x .gt. 0 .and. lon12 .gt. 0) then
+      if (lon12 .gt. 0 .and. ((lon1x .lt. 0 .and. lon2x .ge. 0) .or.
+     +                        (lon1x .gt. 0 .and. lon2x .eq. 0))) then
         trnsit = 1
-      else if (lon2x .le. 0 .and. lon1x .gt. 0 .and. lon12 .lt. 0) then
+      else if (lon12 .lt. 0 .and. lon1x .ge. 0 .and. lon2x .lt. 0) then
         trnsit = -1
+      else
+        trnsit = 0
       end if
 
       return
@@ -2191,8 +2195,6 @@
       q = nint(r / 90)
       r = (r - 90 * q) * degree
       s = sin(r)
-* sin(-0) isn't reliably -0, so...
-      if (x .eq. 0) s = x
       c = cos(r)
       q = mod(q + 4, 4)
       if (q .eq. 0) then
@@ -2205,15 +2207,60 @@
         sinx = -s
         cosx = -c
       else
-* q.eq.3
+* q .eq. 3
         sinx = -c
         cosx =  s
       end if
 
-      if (x .ne. 0) then
-        sinx = 0d0 + sinx
-        cosx = 0d0 + cosx
+      if (sinx .eq. 0) then
+        sinx = sign(sinx, x)
       end if
+      cosx = 0d0 + cosx
+
+      return
+      end
+
+      subroutine sncsde(x, t, sinx, cosx)
+* Compute sin(x+t) and cos(x+t) with x in degrees
+* input
+      double precision x, t
+* input/output
+      double precision sinx, cosx
+
+      double precision dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, AngRnd
+      integer digits, maxit1, maxit2
+      logical init
+      common /geocom/ dblmin, dbleps, pi, degree, tiny,
+     +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
+
+      double precision r, s, c
+      integer q
+      q = nint(x / 90)
+      r = x - 90 * q
+      r = AngRnd(r + t) * degree
+      s = sin(r)
+      c = cos(r)
+      q = mod(q + 4, 4)
+      if (q .eq. 0) then
+        sinx =  s
+        cosx =  c
+      else if (q .eq. 1) then
+        sinx =  c
+        cosx = -s
+      else if (q .eq. 2) then
+        sinx = -s
+        cosx = -c
+      else
+* q .eq. 3
+        sinx = -c
+        cosx =  s
+      end if
+
+      if (sinx .eq. 0) then
+        sinx = sign(sinx, x)
+      end if
+      cosx = 0d0 + cosx
 
       return
       end
@@ -2246,15 +2293,11 @@
       end if
       atn2dx = atan2(yy, xx) / degree
       if (q .eq. 1) then
-        if (yy .ge. 0) then
-          atn2dx =  180 - atn2dx
-        else
-          atn2dx = -180 - atn2dx
-        end if
+        atn2dx = sign(180d0, y) - atn2dx
       else if (q .eq. 2) then
-        atn2dx =  90 - atn2dx
+        atn2dx =       90       - atn2dx
       else if (q .eq. 3) then
-        atn2dx = -90 + atn2dx
+        atn2dx =      -90       + atn2dx
       end if
 
       return
@@ -2311,5 +2354,6 @@
 *    polyval       polval
 *    LONG_UNROLL   unroll
 *    sincosd       sncsdx
+*    sincosde      sncsde
 *    atan2d        atn2dx
 *> @endcond SKIP

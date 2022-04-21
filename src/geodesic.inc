@@ -38,4 +38,7 @@
         integer, intent(out) :: major, minor, patch
         end subroutine geover
 
+        subroutine geoini
+        end subroutine geoini
+
       end interface
