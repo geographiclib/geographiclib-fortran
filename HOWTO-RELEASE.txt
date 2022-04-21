@@ -26,6 +26,7 @@ Do not add PROJECT_VERSION_SUFFIX to
 
 Version update checks
 
-# Fortran
-#   src/geodesic.for geover
-#   doc/geodesic-for.dox (date + update change log)
+Fortran
+  src/geodesic.for geover
+  doc/geodesic-for.dox (date + update change log)
+  remove alpha versions of distrib

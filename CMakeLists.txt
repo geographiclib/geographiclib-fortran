@@ -8,7 +8,7 @@ set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 if (PROJECT_VERSION_PATCH GREATER 0)
   set (PROJECT_VERSION "${PROJECT_VERSION}.${PROJECT_VERSION_PATCH}")
 endif ()
-set (PROJECT_VERSION_SUFFIX "-alpha")
+set (PROJECT_VERSION_SUFFIX "")
 set (PROJECT_FULLVERSION ${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX})
 cmake_minimum_required (VERSION 3.13.0)
 
@@ -169,7 +169,7 @@ if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/ AND NOT WIN32)
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
         ${PROJECT_SOURCE_DIR}/distrib-Fortran/
-      COMMAND ${RSYNC} --delete -a --exclude '*~'
+      COMMAND ${RSYNC} --delete -av --exclude '*~'
         ${PROJECT_SOURCE_DIR}/distrib-Fortran/ ${DATAROOT}/)
     add_dependencies (stage-dist dist)
 
