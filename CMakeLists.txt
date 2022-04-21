@@ -122,6 +122,8 @@ set (CPACK_SOURCE_IGNORE_FILES
   "#"
   "~\$"
   "/\\\\.git"
+  "/\\\\.htaccess"
+  "${PROJECT_SOURCE_DIR}/doc/.*html"
   "${PROJECT_SOURCE_DIR}/BUILD"
   "${PROJECT_SOURCE_DIR}/distrib-Fortran")
 set (CPACK_SOURCE_GENERATOR TGZ)
@@ -135,28 +137,28 @@ set (CPACK_PACKAGE_INSTALL_DIRECTORY "${PACKAGE_DIR}")
 
 include (CPack)
 
-if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/.git)
+if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/ AND NOT WIN32)
 
   set (DISTRIB_DIR "${CMAKE_BINARY_DIR}/distrib")
   add_custom_target (dist
     COMMAND ${CMAKE_MAKE_PROGRAM} package_source
     COMMAND ${CMAKE_COMMAND} -E
-    copy ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz
-    ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
+      copy ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz
+      ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
     COMMAND
-    cd _CPack_Packages/Linux-Source/TGZ/${CPACK_PACKAGE_INSTALL_DIRECTORY} &&
-    find -type f | cut -f2- -d/ | sort > ${DISTRIB_DIR}/package.list &&
-    cd ${PROJECT_SOURCE_DIR} &&
-    git ls-files | sort > ${DISTRIB_DIR}/git.list &&
-    comm -23 ${DISTRIB_DIR}/package.list ${DISTRIB_DIR}/git.list
-    > ${DISTRIB_DIR}/unwanted.list &&
-    if test -s ${DISTRIB_DIR}/unwanted.list\; then
-    echo "WARNING: Unwanted files in source package" &&
-    cat ${DISTRIB_DIR}/unwanted.list\; fi &&
-    echo "created distrib/${PACKAGE_NAME}.tar.gz")
+      cd _CPack_Packages/Linux-Source/TGZ/${CPACK_PACKAGE_INSTALL_DIRECTORY} &&
+      find -type f | cut -f2- -d/ | sort > ${DISTRIB_DIR}/package.list &&
+      cd ${PROJECT_SOURCE_DIR} &&
+      git ls-files | sort > ${DISTRIB_DIR}/git.list &&
+      comm -23 ${DISTRIB_DIR}/package.list ${DISTRIB_DIR}/git.list
+      > ${DISTRIB_DIR}/unwanted.list &&
+      if test -s ${DISTRIB_DIR}/unwanted.list\; then
+      echo "WARNING: Unwanted files in source package" &&
+      cat ${DISTRIB_DIR}/unwanted.list\; fi &&
+      echo "created distrib/${PACKAGE_NAME}.tar.gz")
 
   find_program (RSYNC rsync)
-  if (RSYNC)
+  if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/distrib-Fortran AND RSYNC)
     set (USER karney)
     set (DATAROOT $ENV{HOME}/web/geographiclib-files/distrib-Fortran)
     set (DOCROOT $ENV{HOME}/web/geographiclib-web/htdocs/Fortran)
@@ -165,16 +167,17 @@ if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/.git)
 
     add_custom_target (stage-dist
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
-      ${PROJECT_SOURCE_DIR}/distrib-Fortran/
+        ${DISTRIB_DIR}/${PACKAGE_NAME}.tar.gz
+        ${PROJECT_SOURCE_DIR}/distrib-Fortran/
       COMMAND ${RSYNC} --delete -a --exclude '*~'
-      ${PROJECT_SOURCE_DIR}/distrib-Fortran/ ${DATAROOT}/)
+        ${PROJECT_SOURCE_DIR}/distrib-Fortran/ ${DATAROOT}/)
     add_dependencies (stage-dist dist)
 
     if (BUILD_DOCUMENTATION)
       add_custom_target (stage-doc
-        COMMAND ${RSYNC} --delete -a
-        doc/html/ ${DOCROOT}/${PROJECT_VERSION}/)
+        COMMAND ${RSYNC} --delete -a doc/html/ ${DOCROOT}/${PROJECT_VERSION}/
+	COMMAND cd ${PROJECT_SOURCE_DIR}/doc &&
+	  ${RSYNC} --delete -av HEADER.html FOOTER.html .htaccess ${DOCROOT}/)
       add_dependencies (stage-doc doc)
     endif ()
 
