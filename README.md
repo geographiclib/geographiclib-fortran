@@ -7,6 +7,9 @@ The two tools ngsforward and ngsinverse are replacements for the tools
 FORWARD and INVERSE available from the
 [NGS](http://www.ngs.noaa.gov/PC_PROD/Inv_Fwd/)
 
+Licensed under the MIT/X11 License; see
+[LICENSE.txt](https://geographiclib.sourceforge.io/LICENSE.txt).
+
 The algorithms are documented in
 
 * C. F. F. Karney,
