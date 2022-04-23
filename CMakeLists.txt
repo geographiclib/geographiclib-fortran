@@ -3,12 +3,12 @@ project (GeographicLib-Fortran Fortran)
 # Version information
 set (PROJECT_VERSION_MAJOR 2)
 set (PROJECT_VERSION_MINOR 0)
-set (PROJECT_VERSION_PATCH 0)
+set (PROJECT_VERSION_PATCH 1)
 set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 if (PROJECT_VERSION_PATCH GREATER 0)
   set (PROJECT_VERSION "${PROJECT_VERSION}.${PROJECT_VERSION_PATCH}")
 endif ()
-set (PROJECT_VERSION_SUFFIX "")
+set (PROJECT_VERSION_SUFFIX "-devel")
 set (PROJECT_FULLVERSION ${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX})
 cmake_minimum_required (VERSION 3.13.0)
 
@@ -176,8 +176,8 @@ if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/ AND NOT WIN32)
     if (BUILD_DOCUMENTATION)
       add_custom_target (stage-doc
         COMMAND ${RSYNC} --delete -a doc/html/ ${DOCROOT}/${PROJECT_VERSION}/
-	COMMAND cd ${PROJECT_SOURCE_DIR}/doc &&
-	  ${RSYNC} --delete -av HEADER.html FOOTER.html .htaccess ${DOCROOT}/)
+        COMMAND cd ${PROJECT_SOURCE_DIR}/doc &&
+          ${RSYNC} --delete -av HEADER.html FOOTER.html .htaccess ${DOCROOT}/)
       add_dependencies (stage-doc doc)
     endif ()
 
