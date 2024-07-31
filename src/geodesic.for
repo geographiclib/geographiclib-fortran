@@ -783,7 +783,7 @@
           calp1b = -1
           tripn = .false.
           tripb = .false.
-          do 10 numit = 0, maxit2-1
+          do 10 numit = 0, maxit2
 * the WGS84 test set: mean = 1.47, sd = 1.25, max = 16
 * WGS84 and random input: mean = 2.85, sd = 0.60
             v = Lam12f(sbet1, cbet1, dn1, sbet2, cbet2, dn2,
@@ -796,8 +796,8 @@
             else
               dummy = 1
             end if
-            if (tripb .or. .not. (abs(v) .ge. dummy * tol0))
-     +          go to 20
+            if (tripb .or. .not. (abs(v) .ge. dummy * tol0) .or.
+     +          numit .eq. maxit2) go to 20
 * Update bracketing values
             if (v .gt. 0 .and. (numit .gt. maxit1 .or.
      +          calp1/salp1 .gt. calp1b/salp1b)) then
@@ -1072,7 +1072,7 @@
       tol1 = 200 * tol0
       tol2 = sqrt(tol0)
 * Check on bisection interval
-      tolb = tol0 * tol2
+      tolb = tol0
       xthrsh = 1000 * tol2
       maxit1 = 20
       maxit2 = maxit1 + digits + 10

@@ -1108,8 +1108,8 @@
       integer function tstg99()
 * Test case https://github.com/geographiclib/geographiclib-js/issues/3
 * Problem was that output of sincosd(+/-45) was inconsistent because of
-* directed rounding by Math.round.  Fix by porting special treatment of
-* angles +/-45 and +/-30 from C++ library.
+* directed rounding by Javascript's Math.round.  Fortan implementation
+* was OK
       double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
       double precision a, f
       integer r, assert, omask
