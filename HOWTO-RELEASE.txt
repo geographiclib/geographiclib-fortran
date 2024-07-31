@@ -30,3 +30,6 @@ Fortran
   src/geodesic.for geover
   doc/geodesic-for.dox (date + update change log)
   remove alpha versions of distrib
+
+TODO...
+  Eliminate duplicate documentation in geodesic.for and geodesic-for.dox.

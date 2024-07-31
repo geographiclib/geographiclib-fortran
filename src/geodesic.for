@@ -1,5 +1,5 @@
 * The subroutines in this files are documented at
-* https://geographiclib.sourceforge.io/html/Fortran/
+* https://geographiclib.sourceforge.io/Fortran/doc/index.html
 *
 *> @file geodesic.for
 *! @brief Implementation of geodesic routines in Fortran
@@ -810,18 +810,20 @@
             end if
             if (numit .lt. maxit1 .and. dv .gt. 0) then
               dalp1 = -v/dv
-              sdalp1 = sin(dalp1)
-              cdalp1 = cos(dalp1)
-              nsalp1 = salp1 * cdalp1 + calp1 * sdalp1
-              if (nsalp1 .gt. 0 .and. abs(dalp1) .lt. pi) then
-                calp1 = calp1 * cdalp1 - salp1 * sdalp1
-                salp1 = nsalp1
-                call norm2x(salp1, calp1)
+              if (abs(dalp1) .lt. pi) then
+                sdalp1 = sin(dalp1)
+                cdalp1 = cos(dalp1)
+                nsalp1 = salp1 * cdalp1 + calp1 * sdalp1
+                if (nsalp1 .gt. 0) then
+                  calp1 = calp1 * cdalp1 - salp1 * sdalp1
+                  salp1 = nsalp1
+                  call norm2x(salp1, calp1)
 * In some regimes we don't get quadratic convergence because
 * slope -> 0.  So use convergence conditions based on dbleps
 * instead of sqrt(dbleps).
-                tripn = abs(v) .le. 16 * tol0
-                go to 10
+                  tripn = abs(v) .le. 16 * tol0
+                  go to 10
+                end if
               end if
             end if
 * Either dv was not positive or updated value was outside legal

@@ -34,7 +34,7 @@ This an implementation in Fortran of the geodesic algorithms described in
 Other links
 - Library documentation (all versions):
   <a href="../">https://geographiclib.sourceforge.io/Fortran</a>
-- GIT repository: https://github.com/geographiclib/geographiclib-fortran
+- Git repository: https://github.com/geographiclib/geographiclib-fortran
   Releases are tagged in git as, e.g., v1.52, v2.0, etc.
 - Source distribution:
   https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
@@ -42,6 +42,10 @@ Other links
   <a href="../../index.html">https://geographiclib.sourceforge.io</a>
 - The library has been implemented in a few other <a
   href="../../doc/library.html#languages">languages</a>.
+- This Fortran library has been incorporated with (some language
+  modernization) into Jacob Williams'
+  <a "https://github.com/jacobwilliams/geodesic-fortran">
+  geodesic-fortran</a> library.
 
 \section contents Contents
  - \ref intro

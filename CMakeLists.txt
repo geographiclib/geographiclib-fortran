@@ -1,3 +1,4 @@
+cmake_minimum_required (VERSION 3.13.0)
 project (GeographicLib-Fortran Fortran)
 
 # Version information
@@ -10,7 +11,6 @@ if (PROJECT_VERSION_PATCH GREATER 0)
 endif ()
 set (PROJECT_VERSION_SUFFIX "-devel")
 set (PROJECT_FULLVERSION ${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX})
-cmake_minimum_required (VERSION 3.13.0)
 
 set (PACKAGE_DIR "${PROJECT_NAME}-${PROJECT_VERSION}")
 set (PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_FULLVERSION}")
