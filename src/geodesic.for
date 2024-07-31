@@ -2191,13 +2191,21 @@
       common /geocom/ dblmin, dbleps, pi, degree, tiny,
      +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
 
-      double precision r, s, c
+      double precision d, r, s, c
       integer q
-      r = mod(x, 360d0)
-      q = nint(r / 90)
-      r = (r - 90 * q) * degree
+      d = mod(x, 360d0)
+      q = nint(d / 90)
+      d = d - 90 * q
+      r = d * degree
       s = sin(r)
       c = cos(r)
+      if (abs(d) .eq. 45d0) then
+        c = sqrt(0.5d0)
+        s = sign(s, r)
+      else if (abs(d) .eq. 30d0) then
+        c = sqrt(0.75d0)
+        s = sign(0.5d0, r)
+      end if
       q = mod(q + 4, 4)
       if (q .eq. 0) then
         sinx =  s
@@ -2236,13 +2244,22 @@
       common /geocom/ dblmin, dbleps, pi, degree, tiny,
      +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
 
-      double precision r, s, c
+      double precision d, r, s, c
       integer q
-      q = nint(x / 90)
-      r = x - 90 * q
-      r = AngRnd(r + t) * degree
+      d = mod(x, 360d0)
+      q = nint(d / 90)
+      d = d - 90 * q
+      d = AngRnd(d + t)
+      r = d * degree
       s = sin(r)
       c = cos(r)
+      if (abs(d) .eq. 45d0) then
+        c = sqrt(0.5d0)
+        s = sign(s, r)
+      else if (abs(d) .eq. 30d0) then
+        c = sqrt(0.75d0)
+        s = sign(0.5d0, r)
+      end if
       q = mod(q + 4, 4)
       if (q .eq. 0) then
         sinx =  s
@@ -2260,7 +2277,7 @@
       end if
 
       if (sinx .eq. 0) then
-        sinx = sign(sinx, x)
+        sinx = sign(sinx, x+t)
       end if
       cosx = 0d0 + cosx
 
