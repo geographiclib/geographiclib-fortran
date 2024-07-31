@@ -114,7 +114,7 @@
 *! restructuring the internals of the Fortran code since this may make
 *! porting fixes from the C++ code more difficult.
 *!
-*! Copyright (c) Charles Karney (2012-2022) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2012-2022) <karney@alum.mit.edu> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
 

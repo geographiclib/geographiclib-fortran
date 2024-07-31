@@ -31,4 +31,4 @@ The algorithms are documented in
   [geodesic-fortran](https://github.com/jacobwilliams/geodesic-fortran)
   library.
 * GeographicLib: https://geographiclib.sourceforge.io
-* Author: Charles Karney, <charles@karney.com>
+* Author: Charles Karney, <karney@alum.mit.edu>
