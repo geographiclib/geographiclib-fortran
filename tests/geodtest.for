@@ -1109,7 +1109,7 @@
 * Test case https://github.com/geographiclib/geographiclib-js/issues/3
 * Problem was that output of sincosd(+/-45) was inconsistent because of
 * directed rounding by Javascript's Math.round.  Fortan implementation
-* was OK
+* was OK.
       double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
       double precision a, f
       integer r, assert, omask

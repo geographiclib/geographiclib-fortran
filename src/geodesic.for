@@ -1162,6 +1162,8 @@
 * accurate cancellation in the case of coincident points.
         m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) -
      +      csig1 * csig2 * J12
+      else
+        m12b = 0
       end if
       if (scalp) then
         csig12 = csig1 * csig2 + ssig1 * ssig2
@@ -2375,4 +2377,4 @@
 *    sincosd       sncsdx
 *    sincosde      sncsde
 *    atan2d        atn2dx
-*> @endcond SKIP
+*> @endcond
