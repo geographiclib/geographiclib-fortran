@@ -1,8 +1,9 @@
+cmake_minimum_required (VERSION 3.17.0)
 project (GeographicLib-Fortran Fortran)
 
 # Version information
 set (PROJECT_VERSION_MAJOR 2)
-set (PROJECT_VERSION_MINOR 0)
+set (PROJECT_VERSION_MINOR 1)
 set (PROJECT_VERSION_PATCH 0)
 set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 if (PROJECT_VERSION_PATCH GREATER 0)
@@ -10,7 +11,6 @@ if (PROJECT_VERSION_PATCH GREATER 0)
 endif ()
 set (PROJECT_VERSION_SUFFIX "")
 set (PROJECT_FULLVERSION ${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX})
-cmake_minimum_required (VERSION 3.13.0)
 
 set (PACKAGE_DIR "${PROJECT_NAME}-${PROJECT_VERSION}")
 set (PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_FULLVERSION}")
@@ -103,7 +103,7 @@ if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/.git AND NOT WIN32)
   add_custom_target (checkblanklines
     COMMAND git ls-files |
     while read f\; do tr 'X\\n' 'YX' < $$f |
-    egrep '\(^X|XXX|XX$$|[^X]$$\)' > /dev/null && echo $$f\; done || true
+    grep -E '\(^X|XXX|XX$$|[^X]$$\)' > /dev/null && echo $$f\; done || true
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Looking for extra blank lines")
 
@@ -113,7 +113,7 @@ endif ()
 
 # The configuration of CPack is via variables that need to be set before
 # the include (CPack).
-set (CPACK_PACKAGE_CONTACT charles@karney.com)
+set (CPACK_PACKAGE_CONTACT karney@alum.mit.edu)
 set (CPACK_PACKAGE_VENDOR "GeographicLib-Fortran")
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY
   "GeographicLib Fortran library and documentation")
@@ -176,8 +176,8 @@ if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/ AND NOT WIN32)
     if (BUILD_DOCUMENTATION)
       add_custom_target (stage-doc
         COMMAND ${RSYNC} --delete -a doc/html/ ${DOCROOT}/${PROJECT_VERSION}/
-	COMMAND cd ${PROJECT_SOURCE_DIR}/doc &&
-	  ${RSYNC} --delete -av HEADER.html FOOTER.html .htaccess ${DOCROOT}/)
+        COMMAND cd ${PROJECT_SOURCE_DIR}/doc &&
+          ${RSYNC} --delete -av HEADER.html FOOTER.html .htaccess ${DOCROOT}/)
       add_dependencies (stage-doc doc)
     endif ()
 

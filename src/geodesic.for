@@ -1,5 +1,5 @@
 * The subroutines in this files are documented at
-* https://geographiclib.sourceforge.io/html/Fortran/
+* https://geographiclib.sourceforge.io/Fortran/doc/index.html
 *
 *> @file geodesic.for
 *! @brief Implementation of geodesic routines in Fortran
@@ -114,7 +114,7 @@
 *! restructuring the internals of the Fortran code since this may make
 *! porting fixes from the C++ code more difficult.
 *!
-*! Copyright (c) Charles Karney (2012-2022) <charles@karney.com> and
+*! Copyright (c) Charles Karney (2012-2025) <karney@alum.mit.edu> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
 
@@ -705,7 +705,7 @@
 *
 * In fact, we will have sig12 > pi/2 for meridional geodesic which is
 * not a shortest path.
-        if (sig12 .lt. 1 .or. m12x .ge. 0) then
+        if (sig12 .lt. tol2 .or. m12x .ge. 0) then
           if (sig12 .lt. 3 * tiny .or.
      +        (sig12 .lt. tol0 .and.
      +        (s12x .lt. 0 .or. m12x .lt. 0))) then
@@ -783,7 +783,7 @@
           calp1b = -1
           tripn = .false.
           tripb = .false.
-          do 10 numit = 0, maxit2-1
+          do 10 numit = 0, maxit2
 * the WGS84 test set: mean = 1.47, sd = 1.25, max = 16
 * WGS84 and random input: mean = 2.85, sd = 0.60
             v = Lam12f(sbet1, cbet1, dn1, sbet2, cbet2, dn2,
@@ -796,8 +796,8 @@
             else
               dummy = 1
             end if
-            if (tripb .or. .not. (abs(v) .ge. dummy * tol0))
-     +          go to 20
+            if (tripb .or. .not. (abs(v) .ge. dummy * tol0) .or.
+     +          numit .eq. maxit2) go to 20
 * Update bracketing values
             if (v .gt. 0 .and. (numit .gt. maxit1 .or.
      +          calp1/salp1 .gt. calp1b/salp1b)) then
@@ -810,18 +810,20 @@
             end if
             if (numit .lt. maxit1 .and. dv .gt. 0) then
               dalp1 = -v/dv
-              sdalp1 = sin(dalp1)
-              cdalp1 = cos(dalp1)
-              nsalp1 = salp1 * cdalp1 + calp1 * sdalp1
-              if (nsalp1 .gt. 0 .and. abs(dalp1) .lt. pi) then
-                calp1 = calp1 * cdalp1 - salp1 * sdalp1
-                salp1 = nsalp1
-                call norm2x(salp1, calp1)
+              if (abs(dalp1) .lt. pi) then
+                sdalp1 = sin(dalp1)
+                cdalp1 = cos(dalp1)
+                nsalp1 = salp1 * cdalp1 + calp1 * sdalp1
+                if (nsalp1 .gt. 0) then
+                  calp1 = calp1 * cdalp1 - salp1 * sdalp1
+                  salp1 = nsalp1
+                  call norm2x(salp1, calp1)
 * In some regimes we don't get quadratic convergence because
 * slope -> 0.  So use convergence conditions based on dbleps
 * instead of sqrt(dbleps).
-                tripn = abs(v) .le. 16 * tol0
-                go to 10
+                  tripn = abs(v) .le. 16 * tol0
+                  go to 10
+                end if
               end if
             end if
 * Either dv was not positive or updated value was outside legal
@@ -1031,7 +1033,7 @@
       integer major, minor, patch
 
       major = 2
-      minor = 0
+      minor = 1
       patch = 0
 
       return
@@ -1070,7 +1072,7 @@
       tol1 = 200 * tol0
       tol2 = sqrt(tol0)
 * Check on bisection interval
-      tolb = tol0 * tol2
+      tolb = tol0
       xthrsh = 1000 * tol2
       maxit1 = 20
       maxit2 = maxit1 + digits + 10
@@ -1160,6 +1162,8 @@
 * accurate cancellation in the case of coincident points.
         m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) -
      +      csig1 * csig2 * J12
+      else
+        m12b = 0
       end if
       if (scalp) then
         csig12 = csig1 * csig2 + ssig1 * ssig2
@@ -2189,13 +2193,21 @@
       common /geocom/ dblmin, dbleps, pi, degree, tiny,
      +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
 
-      double precision r, s, c
+      double precision d, r, s, c
       integer q
-      r = mod(x, 360d0)
-      q = nint(r / 90)
-      r = (r - 90 * q) * degree
+      d = mod(x, 360d0)
+      q = nint(d / 90)
+      d = d - 90 * q
+      r = d * degree
       s = sin(r)
       c = cos(r)
+      if (abs(d) .eq. 45d0) then
+        c = sqrt(0.5d0)
+        s = sign(s, r)
+      else if (abs(d) .eq. 30d0) then
+        c = sqrt(0.75d0)
+        s = sign(0.5d0, r)
+      end if
       q = mod(q + 4, 4)
       if (q .eq. 0) then
         sinx =  s
@@ -2234,13 +2246,22 @@
       common /geocom/ dblmin, dbleps, pi, degree, tiny,
      +    tol0, tol1, tol2, tolb, xthrsh, digits, maxit1, maxit2, init
 
-      double precision r, s, c
+      double precision d, r, s, c
       integer q
-      q = nint(x / 90)
-      r = x - 90 * q
-      r = AngRnd(r + t) * degree
+      d = mod(x, 360d0)
+      q = nint(d / 90)
+      d = d - 90 * q
+      d = AngRnd(d + t)
+      r = d * degree
       s = sin(r)
       c = cos(r)
+      if (abs(d) .eq. 45d0) then
+        c = sqrt(0.5d0)
+        s = sign(s, r)
+      else if (abs(d) .eq. 30d0) then
+        c = sqrt(0.75d0)
+        s = sign(0.5d0, r)
+      end if
       q = mod(q + 4, 4)
       if (q .eq. 0) then
         sinx =  s
@@ -2258,7 +2279,7 @@
       end if
 
       if (sinx .eq. 0) then
-        sinx = sign(sinx, x)
+        sinx = sign(sinx, x+t)
       end if
       cosx = 0d0 + cosx
 
@@ -2356,4 +2377,4 @@
 *    sincosd       sncsdx
 *    sincosde      sncsde
 *    atan2d        atn2dx
-*> @endcond SKIP
+*> @endcond

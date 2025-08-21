@@ -21,10 +21,14 @@ The algorithms are documented in
 
 * Library documentation: https://geographiclib.sourceforge.io/Fortran/doc
 * Change log: https://geographiclib.sourceforge.io/Fortran/doc/changes.html
-* GIT repository: https://github.com/geographiclib/geographiclib-fortran
+* Git repository: https://github.com/geographiclib/geographiclib-fortran
   Releases are tagged in git as, e.g., [`v1.52`](../../tree/v1.52),
   [`v2.0`](../../tree/v2.0), etc.
 * Source distribution:
   https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
+* This Fortran library has been incorporated with (some language
+  modernization) into Jacob Williams'
+  [geodesic-fortran](https://github.com/jacobwilliams/geodesic-fortran)
+  library.
 * GeographicLib: https://geographiclib.sourceforge.io
-* Author: Charles Karney, <charles@karney.com>
+* Author: Charles Karney, <karney@alum.mit.edu>

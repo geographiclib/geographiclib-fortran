@@ -13,8 +13,8 @@ The algorithms are documented in
 Other links:
 
 * Library documentation: https://geographiclib.sourceforge.io/Fortran/doc
-* GIT repository: https://github.com/geographiclib/geographiclib-fortran
+* Git repository: https://github.com/geographiclib/geographiclib-fortran
 * Source distribution:
   https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
 * GeographicLib: https://geographiclib.sourceforge.io
-* Author: Charles Karney, <charles@karney.com>
+* Author: Charles Karney, <karney@alum.mit.edu>

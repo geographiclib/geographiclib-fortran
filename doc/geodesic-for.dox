@@ -3,16 +3,16 @@
  * \file geodesic-for.dox
  * \brief Documentation for geodesic routines implemented in Fortran
  *
- * Written by Charles Karney <charles@karney.com> and licensed under the
+ * Written by Charles Karney <karney@alum.mit.edu> and licensed under the
  * MIT/X11 License.  For more information, see
  * https://geographiclib.sourceforge.io/
  **********************************************************************/
 
 /**
 \mainpage Geodesic routines implemented in Fortran
-\author Charles F. F. Karney (charles@karney.com)
-\version 2.0
-\date 2022-04-21
+\author Charles F. F. Karney (karney@alum.mit.edu)
+\version 2.1
+\date 2025-08-21
 
 \section abstract-for Abstract
 
@@ -34,7 +34,7 @@ This an implementation in Fortran of the geodesic algorithms described in
 Other links
 - Library documentation (all versions):
   <a href="../">https://geographiclib.sourceforge.io/Fortran</a>
-- GIT repository: https://github.com/geographiclib/geographiclib-fortran
+- Git repository: https://github.com/geographiclib/geographiclib-fortran
   Releases are tagged in git as, e.g., v1.52, v2.0, etc.
 - Source distribution:
   https://sourceforge.net/projects/geographiclib/files/distrib-Fortran
@@ -42,6 +42,10 @@ Other links
   <a href="../../index.html">https://geographiclib.sourceforge.io</a>
 - The library has been implemented in a few other <a
   href="../../doc/library.html#languages">languages</a>.
+- This Fortran library has been incorporated with (some language
+  modernization) into Jacob Williams'
+  <a "https://github.com/jacobwilliams/geodesic-fortran">
+  geodesic-fortran</a> library.
 
 \section contents Contents
  - \ref intro
@@ -229,6 +233,13 @@ Here is a brief summary of the functions.
 - geover() returns the version numbers of the library.
 
 \page changes Change log
+
+ - <a href="../2.1/index.html">Version 2.1</a>
+   (released 2025-08-21)
+   - Fix bug in geodesic inverse problem with very prolate ellipsoids.
+   - Minor improvement in the logic for the geodesic inverse problem.
+   - Relax overly strict convergence test for inverse problem.
+   - Improved treatment of sin/cos for +/-45 +/-30.
 
  - <a href="../2.0/index.html">Version 2.0</a>
    (released 2022-04-21)
