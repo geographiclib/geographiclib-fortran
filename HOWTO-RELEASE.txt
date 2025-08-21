@@ -11,6 +11,8 @@ Targets
   stage-{doc,dist}
   deploy-{doc,dist}
 
+Fix doc link for documentation after deployment
+
 not supported:
   install (no distribution envisioned)
   package

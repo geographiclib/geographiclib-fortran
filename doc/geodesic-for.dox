@@ -11,8 +11,8 @@
 /**
 \mainpage Geodesic routines implemented in Fortran
 \author Charles F. F. Karney (karney@alum.mit.edu)
-\version 2.0
-\date 2022-04-21
+\version 2.1
+\date 2025-08-21
 
 \section abstract-for Abstract
 
@@ -233,6 +233,13 @@ Here is a brief summary of the functions.
 - geover() returns the version numbers of the library.
 
 \page changes Change log
+
+ - <a href="../2.1/index.html">Version 2.1</a>
+   (released 2025-08-21)
+   - Fix bug in geodesic inverse problem with very prolate ellipsoids.
+   - Minor improvement in the logic for the geodesic inverse problem.
+   - Relax overly strict convergence test for inverse problem.
+   - Improved treatment of sin/cos for +/-45 +/-30.
 
  - <a href="../2.0/index.html">Version 2.0</a>
    (released 2022-04-21)
