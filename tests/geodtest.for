@@ -1134,6 +1134,34 @@
       return
       end
 
+      integer function tsg100()
+* Check fix for meridional failure for a strongly prolate ellipsoid.
+* This was caused by assuming that sig12 < 1 guarantees the meridional
+* geodesic is shortest (even though m12 < 0).  Counter example is tested
+* here.  Bug is not present for f >= -2, b < 3*a.  For f = -2.1 the
+* inverse calculation for 30.61 0 30.61 180 exhibits the bug.
+      double precision azi1, azi2, s12, a12, m12, MM12, MM21, SS12
+      double precision a, f
+      integer r, assert, omask
+      include 'geodesic.inc'
+
+      a = 1d6
+      f = -3d0
+      omask = 0
+      r = 0
+      call invers(a, f,
+     +    30d0, 0d0, 30d0, 180d0,
+     +    s12, azi1, azi2, omask, a12, m12, MM12, MM21, SS12)
+* Sloppy bounds checking because series solution is inaccurate for
+* ellipsoids this eccentric.
+      r = r + assert(azi1,  22.368806d0, 1d0)
+      r = r + assert(azi2, 157.631194d0, 1d0)
+      r = r + assert(s12,   1074081.6d0, 1d3)
+
+      tsg100 = r
+      return
+      end
+
       integer function tstp0()
 * Check fix for pole-encircling bug found 2011-03-16
       double precision lata(4), lona(4)
@@ -1387,7 +1415,7 @@
      +    tstg0, tstg1, tstg2, tstg5, tstg6, tstg9, tstg10, tstg11,
      +    tstg12, tstg14, tstg15, tstg17, tstg26, tstg28, tstg33,
      +    tstg55, tstg59, tstg61, tstg73, tstg74, tstg76, tstg78,
-     +    tstg80, tstg84, tstg92, tstg94, tstg96, tstg99,
+     +    tstg80, tstg84, tstg92, tstg94, tstg96, tstg99, tsg100,
      +    tstp0, tstp5, tstp6, tstp12, tstp12r, tstp13, tstp15,
      +    tstp19, tstp21
 
@@ -1543,6 +1571,11 @@
         print *, 'tstg96 fail:', i
       end if
       i = tstg99()
+      if (i .gt. 0) then
+        n = n + 1
+        print *, 'tstg99 fail:', i
+      end if
+      i = tsg100()
       if (i .gt. 0) then
         n = n + 1
         print *, 'tstg99 fail:', i

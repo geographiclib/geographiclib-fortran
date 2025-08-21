@@ -114,7 +114,7 @@
 *! restructuring the internals of the Fortran code since this may make
 *! porting fixes from the C++ code more difficult.
 *!
-*! Copyright (c) Charles Karney (2012-2022) <karney@alum.mit.edu> and
+*! Copyright (c) Charles Karney (2012-2025) <karney@alum.mit.edu> and
 *! licensed under the MIT/X11 License.  For more information, see
 *! https://geographiclib.sourceforge.io/
 
@@ -705,7 +705,7 @@
 *
 * In fact, we will have sig12 > pi/2 for meridional geodesic which is
 * not a shortest path.
-        if (sig12 .lt. 1 .or. m12x .ge. 0) then
+        if (sig12 .lt. tol2 .or. m12x .ge. 0) then
           if (sig12 .lt. 3 * tiny .or.
      +        (sig12 .lt. tol0 .and.
      +        (s12x .lt. 0 .or. m12x .lt. 0))) then
@@ -1033,7 +1033,7 @@
       integer major, minor, patch
 
       major = 2
-      minor = 0
+      minor = 1
       patch = 0
 
       return
