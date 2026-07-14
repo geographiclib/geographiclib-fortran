@@ -56,7 +56,7 @@ endif ()
 
 set (LIBNAME geodfor)
 set (TOOLS geoddirect geodinverse planimeter)
-# Work alike for NGS geodesic tools.  This uses legacy code from NGS
+# Work alikes for NGS geodesic tools.  This uses legacy code from NGS
 # and so they trigger multiple errors and warnings if compiled with the
 # compile flags above.
 set (NGSTOOLS ngsforward ngsinverse)
