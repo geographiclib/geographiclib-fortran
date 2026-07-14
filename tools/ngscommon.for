@@ -380,7 +380,7 @@ c
 
       subroutine getdeg(d,m,sec,isign,val)
 
-*** comvert deg, min, sec to degrees
+*** convert deg, min, sec to degrees
 
       implicit double precision(a-h,j-z)
 

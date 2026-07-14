@@ -1,7 +1,7 @@
 *> @file geodesic.inc
 *! @brief The interface file for the geodesic routines in Fortran
 *!
-*! Optinally insert \code
+*! Optionally insert \code
 *! include 'geodesic.inc' \endcode
 *! into the declaration portion of a subroutine that uses this library.
 *!
