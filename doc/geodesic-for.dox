@@ -164,7 +164,7 @@ make test
 \endverbatim
 possibly including some options via <code>-D</code>:
 - <code>CONVERT_WARNINGS_TO_ERRORS</code> warnings are fatal (default ON)
-- <code>BUILD_DOCUMENTATION</code> look for doxgen and build
+- <code>BUILD_DOCUMENTATION</code> look for doxygen and build
   documentation (default ON)
 - <code>BUILD_SHARED_LIBS</code> make a shared (instead of static)
   library (default ON)
@@ -224,10 +224,10 @@ and are therefore in the public domain.
   the library is documented in geodesic.for.
 - Compile and link as described above.
 
-The documention of the library is given in the file, geodesic.for.
+The documentation of the library is given in the file, geodesic.for.
 
 Here is a brief summary of the functions.
-- Call direct() to solve the direct geodesic problme.
+- Call direct() to solve the direct geodesic problem.
 - Call invers() to solve the inverse geodesic problem.
 - Call area() to find the area of a geodesic polygon.
 - geover() returns the version numbers of the library.

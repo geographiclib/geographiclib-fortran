@@ -305,7 +305,7 @@
         call C2f(eps, C2a)
         B21 = TrgSum(.true., ssig1, csig1, C2a, nC2)
       else
-* Suppress bogus warnings about unitialized variables
+* Suppress bogus warnings about uninitialized variables
         A2m1 = 0
         B21 = 0
       end if
@@ -320,7 +320,7 @@
         A4 = a**2 * calp0 * salp0 * e2
         B41 = TrgSum(.false., ssig1, csig1, C4a, nC4)
       else
-* Suppress bogus warnings about unitialized variables
+* Suppress bogus warnings about uninitialized variables
         A4 = 0
         B41 = 0
       end if
@@ -329,7 +329,7 @@
 * Interpret s12a12 as spherical arc length
         sig12 = s12a12 * degree
         call sncsdx(s12a12, ssig12, csig12)
-* Suppress bogus warnings about unitialized variables
+* Suppress bogus warnings about uninitialized variables
         B12 = 0
       else
 * Interpret s12a12 as distance
@@ -669,7 +669,7 @@
       dn1 = sqrt(1 + ep2 * sbet1**2)
       dn2 = sqrt(1 + ep2 * sbet2**2)
 
-* Suppress bogus warnings about unitialized variables
+* Suppress bogus warnings about uninitialized variables
       a12x = 0
       merid = lat1x .eq. -90 .or. slam12 .eq. 0
 

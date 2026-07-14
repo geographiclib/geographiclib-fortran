@@ -109,7 +109,7 @@ c::              - replaced sub gpnarc, gpnloa, gpnhri with invers
 c::              - tested for valid antipodal solutions (+/- 0.1 mm)
 c::              - tested for polar solutions (+/- 0.1 mm)
 c::              - needs improvement for long-line/antipodal boundary
-c::201211.29, cffk, program version numer 3.1
+c::201211.29, cffk, program version number 3.1
 c::              - drop in replacement routines from
 c::                "Algorithms for Geodesics"
 c********1*********2*********3*********4*********5*********6*********7**
